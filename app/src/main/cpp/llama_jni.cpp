@@ -420,14 +420,16 @@ Java_com_localllm_app_inference_LlamaAndroid_generateNative(
         prompt_tokens.resize(n_prompt_tokens);
         LOGI("Prompt tokenized to %d tokens", n_prompt_tokens);
         
-        // Clear KV cache using new API
-        LOGI("Clearing KV cache...");
+        // Clear KV cache using seq_rm for sequence 0
+        // This is safer than llama_memory_clear and sufficient for single-sequence use
+        LOGI("Clearing KV cache for sequence 0...");
         llama_memory_t mem = llama_get_memory(ctx);
         if (mem) {
-            llama_memory_clear(mem, true);
-            LOGI("KV cache cleared");
+            // Remove all tokens from sequence 0 (our only sequence)
+            llama_memory_seq_rm(mem, 0, -1, -1);
+            LOGI("KV cache cleared for sequence 0");
         } else {
-            LOGW("Could not get memory handle for KV cache clear");
+            LOGW("Could not get memory handle - proceeding without cache clear");
         }
         
         // Get context size and validate
