@@ -1,0 +1,39 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <!-- Brain/AI icon representing local LLM -->
+    <group
+        android:translateX="27"
+        android:translateY="27">
+        
+        <!-- Outer circle -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M27,0C12.088,0 0,12.088 0,27s12.088,27 27,27s27,-12.088 27,-27S41.912,0 27,0zM27,50C14.297,50 4,39.703 4,27S14.297,4 27,4s23,10.297 23,23S39.703,50 27,50z"/>
+        
+        <!-- Brain left hemisphere -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M25,12c-6.627,0 -12,5.373 -12,12c0,4.418 2.388,8.275 5.941,10.362C19.486,35.388 20,36.644 20,38v4c0,1.105 0.895,2 2,2h4v-8c0,-1.105 -0.895,-2 -2,-2h-2c-2.209,0 -4,-1.791 -4,-4c0,-2.209 1.791,-4 4,-4c1.105,0 2,-0.895 2,-2v-2c0,-1.105 0.895,-2 2,-2"/>
+        
+        <!-- Brain right hemisphere -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M29,12c6.627,0 12,5.373 12,12c0,4.418 -2.388,8.275 -5.941,10.362C34.514,35.388 34,36.644 34,38v4c0,1.105 -0.895,2 -2,2h-4v-8c0,-1.105 0.895,-2 2,-2h2c2.209,0 4,-1.791 4,-4c0,-2.209 -1.791,-4 -4,-4c-1.105,0 -2,-0.895 -2,-2v-2c0,-1.105 -0.895,-2 -2,-2"/>
+        
+        <!-- Neural connections -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M20,22h14M18,27h18M20,32h14"
+            android:strokeWidth="1.5"
+            android:strokeColor="#FFFFFF"/>
+        
+        <!-- Center dot -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M27,27m-3,0a3,3 0,1 1,6 0a3,3 0,1 1,-6 0"/>
+    </group>
+</vector>
