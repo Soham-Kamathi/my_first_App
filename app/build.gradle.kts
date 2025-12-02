@@ -36,8 +36,11 @@ android {
             cmake {
                 arguments += listOf(
                     "-DANDROID_STL=c++_shared",
-                    "-DCMAKE_BUILD_TYPE=Release"
+                    "-DCMAKE_BUILD_TYPE=Release",
+                    "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
                 )
+                // Add linker flags for 16KB page alignment (Android 15+ compatibility)
+                cppFlags += "-fPIC"
             }
         }
     }

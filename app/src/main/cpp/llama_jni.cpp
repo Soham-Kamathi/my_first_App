@@ -30,15 +30,15 @@ static void batch_add(
         struct llama_batch & batch,
         llama_token id,
         llama_pos pos,
-        const std::vector<llama_seq_id> & seq_ids,
+        llama_seq_id seq_id,
         bool logits) {
-    batch.token   [batch.n_tokens] = id;
-    batch.pos     [batch.n_tokens] = pos;
-    batch.n_seq_id[batch.n_tokens] = seq_ids.size();
-    for (size_t i = 0; i < seq_ids.size(); ++i) {
-        batch.seq_id[batch.n_tokens][i] = seq_ids[i];
-    }
-    batch.logits  [batch.n_tokens] = logits;
+    LOGD("batch_add: token=%d, pos=%d, seq_id=%d, logits=%d, n_tokens=%d", 
+         id, pos, seq_id, logits, batch.n_tokens);
+    batch.token[batch.n_tokens] = id;
+    batch.pos[batch.n_tokens] = pos;
+    batch.n_seq_id[batch.n_tokens] = 1;
+    batch.seq_id[batch.n_tokens][0] = seq_id;
+    batch.logits[batch.n_tokens] = logits ? 1 : 0;
     batch.n_tokens++;
 }
 
@@ -330,106 +330,183 @@ Java_com_localllm_app_inference_LlamaAndroid_generateNative(
         jfloat repeat_penalty,
         jobject callback) {
     
+    LOGI("generateNative called: ctx_ptr=%ld, model_ptr=%ld", (long)ctx_ptr, (long)model_ptr);
+    
     if (ctx_ptr == 0 || model_ptr == 0) {
-        LOGE("Cannot generate: context or model is null");
-        return string_to_jstring(env, "");
+        LOGE("Cannot generate: context or model is null (ctx=%ld, model=%ld)", 
+             (long)ctx_ptr, (long)model_ptr);
+        return string_to_jstring(env, "Error: Model not loaded properly");
     }
     
     // Check if already generating
     bool expected = false;
     if (!g_is_generating.compare_exchange_strong(expected, true)) {
         LOGW("Generation already in progress");
-        return string_to_jstring(env, "");
+        return string_to_jstring(env, "Error: Generation already in progress");
     }
     
     g_cancel_requested.store(false);
+    std::string result;
+    llama_sampler *sampler = nullptr;
     
     try {
         llama_context *ctx = reinterpret_cast<llama_context *>(ctx_ptr);
         llama_model *model = reinterpret_cast<llama_model *>(model_ptr);
+        
+        if (ctx == nullptr || model == nullptr) {
+            LOGE("Context or model pointer is invalid");
+            g_is_generating.store(false);
+            return string_to_jstring(env, "Error: Invalid context or model");
+        }
+        
         const llama_vocab *vocab = llama_model_get_vocab(model);
+        if (vocab == nullptr) {
+            LOGE("Failed to get vocab from model");
+            g_is_generating.store(false);
+            return string_to_jstring(env, "Error: Failed to get vocabulary");
+        }
         
         std::string prompt_str = jstring_to_string(env, prompt);
-        LOGI("Starting generation, prompt length: %zu", prompt_str.length());
+        LOGI("Starting generation, prompt length: %zu chars", prompt_str.length());
+        
+        if (prompt_str.empty()) {
+            LOGE("Empty prompt provided");
+            g_is_generating.store(false);
+            return string_to_jstring(env, "Error: Empty prompt");
+        }
         
         // Get callback method if provided
         jmethodID callback_method = nullptr;
+        jclass callback_class = nullptr;
         if (callback != nullptr) {
-            jclass callback_class = env->GetObjectClass(callback);
-            callback_method = env->GetMethodID(callback_class, "onToken", "(Ljava/lang/String;)V");
+            callback_class = env->GetObjectClass(callback);
+            if (callback_class != nullptr) {
+                callback_method = env->GetMethodID(callback_class, "onToken", "(Ljava/lang/String;)V");
+                if (callback_method == nullptr) {
+                    LOGW("Could not find onToken method, proceeding without callback");
+                }
+            }
         }
         
         // Tokenize the prompt
-        int max_prompt_tokens = prompt_str.length() / 2 + 128;
+        int max_prompt_tokens = prompt_str.length() + 256;
         std::vector<llama_token> prompt_tokens(max_prompt_tokens);
         
+        LOGI("Tokenizing prompt...");
         int n_prompt_tokens = llama_tokenize(vocab, prompt_str.c_str(), prompt_str.length(),
                                               prompt_tokens.data(), max_prompt_tokens,
                                               true, true);
         
         if (n_prompt_tokens < 0) {
-            prompt_tokens.resize(-n_prompt_tokens);
+            LOGI("Need more space for tokens: %d", -n_prompt_tokens);
+            prompt_tokens.resize(-n_prompt_tokens + 100);
             n_prompt_tokens = llama_tokenize(vocab, prompt_str.c_str(), prompt_str.length(),
-                                              prompt_tokens.data(), -n_prompt_tokens,
+                                              prompt_tokens.data(), prompt_tokens.size(),
                                               true, true);
         }
         
         if (n_prompt_tokens < 0) {
-            LOGE("Failed to tokenize prompt");
+            LOGE("Failed to tokenize prompt, error code: %d", n_prompt_tokens);
             g_is_generating.store(false);
-            return string_to_jstring(env, "");
+            return string_to_jstring(env, "Error: Failed to tokenize prompt");
+        }
+        
+        if (n_prompt_tokens == 0) {
+            LOGE("Tokenization returned 0 tokens");
+            g_is_generating.store(false);
+            return string_to_jstring(env, "Error: Prompt tokenized to zero tokens");
         }
         
         prompt_tokens.resize(n_prompt_tokens);
         LOGI("Prompt tokenized to %d tokens", n_prompt_tokens);
         
         // Clear KV cache using new API
+        LOGI("Clearing KV cache...");
         llama_memory_t mem = llama_get_memory(ctx);
         if (mem) {
             llama_memory_clear(mem, true);
+            LOGI("KV cache cleared");
+        } else {
+            LOGW("Could not get memory handle for KV cache clear");
         }
         
-        // Process prompt in batches
-        llama_batch batch = llama_batch_init(512, 0, 1);
+        // Get context size and validate
+        int n_ctx = llama_n_ctx(ctx);
+        LOGI("Context size: %d", n_ctx);
         
-        for (int i = 0; i < n_prompt_tokens; i++) {
-            batch_add(batch, prompt_tokens[i], i, {0}, false);
-            
-            if (batch.n_tokens >= 512 || i == n_prompt_tokens - 1) {
-                // For the last token, we need logits
-                if (i == n_prompt_tokens - 1) {
-                    batch.logits[batch.n_tokens - 1] = true;
-                }
-                
-                if (llama_decode(ctx, batch) != 0) {
-                    LOGE("Failed to decode prompt batch");
-                    llama_batch_free(batch);
-                    g_is_generating.store(false);
-                    return string_to_jstring(env, "");
-                }
-                
-                batch_clear(batch);
+        if (n_prompt_tokens >= n_ctx) {
+            LOGE("Prompt (%d tokens) exceeds context size (%d)", n_prompt_tokens, n_ctx);
+            g_is_generating.store(false);
+            return string_to_jstring(env, "Error: Prompt too long for context");
+        }
+        
+        // Use llama_batch_get_one for simpler prompt processing
+        // This is the simplest and most reliable approach for single-sequence inference
+        // llama_batch_get_one automatically tracks positions
+        LOGI("Processing prompt with llama_batch_get_one...");
+        
+        // Process in chunks to avoid memory issues
+        int n_batch = llama_n_batch(ctx);  // Get the batch size from context
+        if (n_batch <= 0) n_batch = 512;   // Fallback
+        LOGI("Using batch size: %d", n_batch);
+        
+        int n_processed = 0;
+        
+        while (n_processed < n_prompt_tokens) {
+            int n_eval = n_prompt_tokens - n_processed;
+            if (n_eval > n_batch) {
+                n_eval = n_batch;
             }
+            
+            LOGI("Evaluating tokens %d to %d (batch of %d)", n_processed, n_processed + n_eval - 1, n_eval);
+            
+            // Use llama_batch_get_one - it handles everything automatically
+            // Positions are tracked by llama_decode internally
+            llama_batch batch_chunk = llama_batch_get_one(prompt_tokens.data() + n_processed, n_eval);
+            
+            LOGI("Calling llama_decode for batch at position %d with %d tokens", n_processed, n_eval);
+            int ret = llama_decode(ctx, batch_chunk);
+            
+            // Note: llama_batch_get_one returns a stack-allocated batch that doesn't need freeing
+            
+            if (ret != 0) {
+                LOGE("llama_decode failed at position %d with error %d", n_processed, ret);
+                g_is_generating.store(false);
+                return string_to_jstring(env, "Error: Failed to process prompt");
+            }
+            
+            n_processed += n_eval;
+            LOGI("Processed %d/%d tokens", n_processed, n_prompt_tokens);
         }
+        
+        LOGI("Prompt processing complete");
         
         // Initialize sampler
-        llama_sampler *sampler = llama_sampler_chain_init(llama_sampler_chain_default_params());
+        LOGI("Initializing sampler with temp=%.2f, top_p=%.2f, top_k=%d", 
+             temperature, top_p, top_k);
+        sampler = llama_sampler_chain_init(llama_sampler_chain_default_params());
+        if (sampler == nullptr) {
+            LOGE("Failed to create sampler");
+            g_is_generating.store(false);
+            return string_to_jstring(env, "Error: Failed to create sampler");
+        }
+        
         llama_sampler_chain_add(sampler, llama_sampler_init_top_k(top_k > 0 ? top_k : 40));
         llama_sampler_chain_add(sampler, llama_sampler_init_top_p(top_p > 0 ? top_p : 0.95f, 1));
         llama_sampler_chain_add(sampler, llama_sampler_init_temp(temperature > 0 ? temperature : 0.8f));
         llama_sampler_chain_add(sampler, llama_sampler_init_dist(LLAMA_DEFAULT_SEED));
         
         // Generate tokens
-        std::string result;
         int n_cur = n_prompt_tokens;
         char token_buf[256];
+        llama_token token_arr[1];  // Array for single token
         
         LOGI("Starting token generation, max_tokens=%d", max_tokens);
         
         for (int i = 0; i < max_tokens; i++) {
             // Check for cancellation
             if (g_cancel_requested.load()) {
-                LOGI("Generation cancelled by user");
+                LOGI("Generation cancelled by user at token %d", i);
                 break;
             }
             
@@ -438,51 +515,74 @@ Java_com_localllm_app_inference_LlamaAndroid_generateNative(
             
             // Check for end of generation
             if (llama_vocab_is_eog(vocab, new_token)) {
-                LOGI("End of generation token received");
+                LOGI("End of generation token received at token %d", i);
                 break;
             }
             
             // Convert token to string
-            int token_len = llama_token_to_piece(vocab, new_token, token_buf, sizeof(token_buf), 0, true);
+            int token_len = llama_token_to_piece(vocab, new_token, token_buf, sizeof(token_buf) - 1, 0, true);
             if (token_len > 0) {
+                token_buf[token_len] = '\0'; // Null terminate
                 std::string token_str(token_buf, token_len);
                 result += token_str;
                 
-                // Call callback if provided
-                if (callback_method != nullptr) {
+                // Call callback if provided - with exception handling
+                if (callback_method != nullptr && callback != nullptr) {
                     jstring jtoken = string_to_jstring(env, token_str);
-                    env->CallVoidMethod(callback, callback_method, jtoken);
-                    env->DeleteLocalRef(jtoken);
+                    if (jtoken != nullptr) {
+                        env->CallVoidMethod(callback, callback_method, jtoken);
+                        
+                        // Check for Java exceptions
+                        if (env->ExceptionCheck()) {
+                            LOGW("Exception in callback, clearing and continuing");
+                            env->ExceptionClear();
+                        }
+                        
+                        env->DeleteLocalRef(jtoken);
+                    }
+                }
+                
+                if (i % 50 == 0) {
+                    LOGD("Generated %d tokens so far", i + 1);
                 }
             }
             
-            // Prepare next batch
-            batch_clear(batch);
-            batch_add(batch, new_token, n_cur, {0}, true);
+            // Check context limit
+            if (n_cur >= n_ctx - 1) {
+                LOGW("Reached context limit at token %d", i);
+                break;
+            }
+            
+            // Use llama_batch_get_one for the next token - simplest approach
+            token_arr[0] = new_token;
+            llama_batch token_batch = llama_batch_get_one(token_arr, 1);
             n_cur++;
             
-            // Decode
-            if (llama_decode(ctx, batch) != 0) {
-                LOGE("Failed to decode during generation");
+            // Decode the new token
+            int decode_result = llama_decode(ctx, token_batch);
+            if (decode_result != 0) {
+                LOGE("Failed to decode during generation at token %d, error: %d", i, decode_result);
                 break;
             }
         }
         
-        LOGI("Generation complete, generated %zu chars", result.length());
+        LOGI("Generation complete, generated %zu chars in %d tokens", result.length(), n_cur - n_prompt_tokens);
         
-        llama_sampler_free(sampler);
-        llama_batch_free(batch);
+        if (sampler) llama_sampler_free(sampler);
         g_is_generating.store(false);
         
         return string_to_jstring(env, result);
+        
     } catch (const std::exception& e) {
         LOGE("Exception during generation: %s", e.what());
+        if (sampler) llama_sampler_free(sampler);
         g_is_generating.store(false);
-        return string_to_jstring(env, "");
+        return string_to_jstring(env, std::string("Error: ") + e.what());
     } catch (...) {
         LOGE("Unknown exception during generation");
+        if (sampler) llama_sampler_free(sampler);
         g_is_generating.store(false);
-        return string_to_jstring(env, "");
+        return string_to_jstring(env, "Error: Unknown native error");
     }
 }
 

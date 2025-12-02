@@ -14,6 +14,10 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG -fPIC")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -DNDEBUG -fPIC")
 
+# 16KB page size alignment for Android 15+ compatibility
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,max-page-size=16384")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-z,max-page-size=16384")
+
 # llama.cpp configuration
 set(LLAMA_CPP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/llama.cpp)
 set(GGML_DIR ${LLAMA_CPP_DIR}/ggml)
@@ -78,6 +82,11 @@ target_link_libraries(localllm
 # Compiler definitions
 target_compile_definitions(localllm PRIVATE
     GGML_USE_CPU
+)
+
+# 16KB page alignment for Android 15+ devices
+set_target_properties(localllm PROPERTIES
+    LINK_FLAGS "-Wl,-z,max-page-size=16384"
 )
 
 # ARM-specific optimizations
