@@ -58,14 +58,20 @@ data class ModelInfo(
  * Prompt template formats for different model types.
  */
 object PromptTemplate {
-    const val CHATML = "chatml"
-    const val ALPACA = "alpaca"
-    const val VICUNA = "vicuna"
-    const val LLAMA2 = "llama2"
-    const val MISTRAL = "mistral"
-    const val PHI = "phi"
-    const val ZEPHYR = "zephyr"
-    const val RAW = "raw"
+    const val CHATML = "chatml"           // Qwen, SmolLM, TinyLlama, etc.
+    const val ALPACA = "alpaca"           // Alpaca-style models
+    const val VICUNA = "vicuna"           // Vicuna models
+    const val LLAMA2 = "llama2"           // Llama 2 format
+    const val LLAMA3 = "llama3"           // Llama 3.x format
+    const val MISTRAL = "mistral"         // Mistral/Mixtral
+    const val PHI = "phi"                 // Microsoft Phi (old)
+    const val PHI3 = "phi3"               // Microsoft Phi-3/4
+    const val ZEPHYR = "zephyr"           // Zephyr format
+    const val GEMMA = "gemma"             // Google Gemma
+    const val DEEPSEEK = "deepseek"       // DeepSeek models
+    const val COHERE = "cohere"           // Cohere Aya
+    const val STARCODER = "starcoder"     // StarCoder models
+    const val RAW = "raw"                 // Raw text
 }
 
 /**

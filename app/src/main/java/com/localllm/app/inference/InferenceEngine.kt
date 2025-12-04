@@ -161,10 +161,16 @@ class InferenceEngine @Inject constructor(
             PromptTemplate.CHATML -> buildChatMLPrompt(messages, systemPrompt)
             PromptTemplate.ALPACA -> buildAlpacaPrompt(messages, systemPrompt)
             PromptTemplate.LLAMA2 -> buildLlama2Prompt(messages, systemPrompt)
+            PromptTemplate.LLAMA3 -> buildLlama3Prompt(messages, systemPrompt)
             PromptTemplate.MISTRAL -> buildMistralPrompt(messages, systemPrompt)
             PromptTemplate.VICUNA -> buildVicunaPrompt(messages, systemPrompt)
             PromptTemplate.ZEPHYR -> buildZephyrPrompt(messages, systemPrompt)
             PromptTemplate.PHI -> buildPhiPrompt(messages, systemPrompt)
+            PromptTemplate.PHI3 -> buildPhi3Prompt(messages, systemPrompt)
+            PromptTemplate.GEMMA -> buildGemmaPrompt(messages, systemPrompt)
+            PromptTemplate.DEEPSEEK -> buildDeepSeekPrompt(messages, systemPrompt)
+            PromptTemplate.COHERE -> buildCoherePrompt(messages, systemPrompt)
+            PromptTemplate.STARCODER -> buildStarCoderPrompt(messages, systemPrompt)
             else -> buildRawPrompt(messages, systemPrompt)
         }
     }
@@ -307,6 +313,156 @@ class InferenceEngine @Inject constructor(
         }
         
         sb.append("Output:")
+        return sb.toString()
+    }
+
+    /**
+     * Phi-3/Phi-4 prompt format
+     */
+    private fun buildPhi3Prompt(messages: List<ChatMessage>, systemPrompt: String?): String {
+        val sb = StringBuilder()
+        
+        if (!systemPrompt.isNullOrBlank()) {
+            sb.append("<|system|>\n$systemPrompt<|end|>\n")
+        }
+        
+        for (message in messages) {
+            when (message.role) {
+                MessageRole.USER -> sb.append("<|user|>\n${message.content}<|end|>\n")
+                MessageRole.ASSISTANT -> sb.append("<|assistant|>\n${message.content}<|end|>\n")
+                MessageRole.SYSTEM -> {}
+            }
+        }
+        
+        sb.append("<|assistant|>\n")
+        return sb.toString()
+    }
+
+    /**
+     * Llama 3.x prompt format with header IDs
+     */
+    private fun buildLlama3Prompt(messages: List<ChatMessage>, systemPrompt: String?): String {
+        val sb = StringBuilder()
+        sb.append("<|begin_of_text|>")
+        
+        if (!systemPrompt.isNullOrBlank()) {
+            sb.append("<|start_header_id|>system<|end_header_id|>\n\n$systemPrompt<|eot_id|>")
+        }
+        
+        for (message in messages) {
+            when (message.role) {
+                MessageRole.USER -> {
+                    sb.append("<|start_header_id|>user<|end_header_id|>\n\n${message.content}<|eot_id|>")
+                }
+                MessageRole.ASSISTANT -> {
+                    sb.append("<|start_header_id|>assistant<|end_header_id|>\n\n${message.content}<|eot_id|>")
+                }
+                MessageRole.SYSTEM -> {}
+            }
+        }
+        
+        sb.append("<|start_header_id|>assistant<|end_header_id|>\n\n")
+        return sb.toString()
+    }
+
+    /**
+     * Google Gemma prompt format
+     */
+    private fun buildGemmaPrompt(messages: List<ChatMessage>, systemPrompt: String?): String {
+        val sb = StringBuilder()
+        
+        // Gemma doesn't have a system token, prepend to first user message
+        var prependSystem = !systemPrompt.isNullOrBlank()
+        
+        for (message in messages) {
+            when (message.role) {
+                MessageRole.USER -> {
+                    sb.append("<start_of_turn>user\n")
+                    if (prependSystem) {
+                        sb.append("$systemPrompt\n\n")
+                        prependSystem = false
+                    }
+                    sb.append("${message.content}<end_of_turn>\n")
+                }
+                MessageRole.ASSISTANT -> {
+                    sb.append("<start_of_turn>model\n${message.content}<end_of_turn>\n")
+                }
+                MessageRole.SYSTEM -> {}
+            }
+        }
+        
+        sb.append("<start_of_turn>model\n")
+        return sb.toString()
+    }
+
+    /**
+     * DeepSeek prompt format (including R1 Distill models)
+     */
+    private fun buildDeepSeekPrompt(messages: List<ChatMessage>, systemPrompt: String?): String {
+        val sb = StringBuilder()
+        
+        if (!systemPrompt.isNullOrBlank()) {
+            sb.append("<｜System｜>$systemPrompt\n")
+        }
+        
+        for (message in messages) {
+            when (message.role) {
+                MessageRole.USER -> sb.append("<｜User｜>${message.content}\n")
+                MessageRole.ASSISTANT -> sb.append("<｜Assistant｜>${message.content}\n")
+                MessageRole.SYSTEM -> {}
+            }
+        }
+        
+        sb.append("<｜Assistant｜>")
+        return sb.toString()
+    }
+
+    /**
+     * Cohere (Aya) prompt format
+     */
+    private fun buildCoherePrompt(messages: List<ChatMessage>, systemPrompt: String?): String {
+        val sb = StringBuilder()
+        
+        if (!systemPrompt.isNullOrBlank()) {
+            sb.append("<|START_OF_TURN_TOKEN|><|SYSTEM_TOKEN|>$systemPrompt<|END_OF_TURN_TOKEN|>")
+        }
+        
+        for (message in messages) {
+            when (message.role) {
+                MessageRole.USER -> {
+                    sb.append("<|START_OF_TURN_TOKEN|><|USER_TOKEN|>${message.content}<|END_OF_TURN_TOKEN|>")
+                }
+                MessageRole.ASSISTANT -> {
+                    sb.append("<|START_OF_TURN_TOKEN|><|CHATBOT_TOKEN|>${message.content}<|END_OF_TURN_TOKEN|>")
+                }
+                MessageRole.SYSTEM -> {}
+            }
+        }
+        
+        sb.append("<|START_OF_TURN_TOKEN|><|CHATBOT_TOKEN|>")
+        return sb.toString()
+    }
+
+    /**
+     * StarCoder prompt format for code generation
+     */
+    private fun buildStarCoderPrompt(messages: List<ChatMessage>, systemPrompt: String?): String {
+        val sb = StringBuilder()
+        
+        // StarCoder uses a simple format
+        if (!systemPrompt.isNullOrBlank()) {
+            sb.append("# System: $systemPrompt\n\n")
+        }
+        
+        for (message in messages) {
+            when (message.role) {
+                MessageRole.USER -> sb.append("# Question:\n${message.content}\n\n")
+                MessageRole.ASSISTANT -> sb.append("# Answer:\n${message.content}\n\n")
+                MessageRole.SYSTEM -> {}
+            }
+        }
+        
+        sb.append("# Answer:\n")
         return sb.toString()
     }
 

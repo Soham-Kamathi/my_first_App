@@ -28,17 +28,75 @@ class ModelRepository @Inject constructor(
     companion object {
         private const val TAG = "ModelRepository"
         
-        // Popular GGUF model repositories on HuggingFace
+        /**
+         * Curated list of GGUF models from Hugging Face optimized for mobile (4-6GB RAM)
+         * Models are categorized by purpose with sizes up to ~5GB (Q4_K_M quantization)
+         * 
+         * Categories:
+         * - General Chat: Balanced models for everyday conversations
+         * - Coding: Specialized for programming assistance
+         * - Reasoning: Advanced logic and math capabilities (DeepSeek R1 distills)
+         * - Fast/Lightweight: Ultra-fast models for low-end devices
+         * - Multilingual: Strong non-English language support
+         */
         private val POPULAR_GGUF_REPOS = listOf(
-            "bartowski/Llama-3.2-1B-Instruct-GGUF",
-            "bartowski/Llama-3.2-3B-Instruct-GGUF",
-            "Qwen/Qwen2.5-0.5B-Instruct-GGUF",
-            "Qwen/Qwen2.5-1.5B-Instruct-GGUF",
-            "microsoft/Phi-3-mini-4k-instruct-gguf",
-            "TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF",
-            "TheBloke/Mistral-7B-Instruct-v0.2-GGUF",
-            "bartowski/gemma-2-2b-it-GGUF",
-            "bartowski/SmolLM2-1.7B-Instruct-GGUF"
+            // ========== GENERAL CHAT (Most Popular) ==========
+            // Llama 3.2 - Meta's latest efficient models, great all-rounders
+            "bartowski/Llama-3.2-1B-Instruct-GGUF",      // ~0.7GB Q4, 1B params, fast
+            "bartowski/Llama-3.2-3B-Instruct-GGUF",      // ~2GB Q4, 3B params, recommended
+            
+            // Qwen 2.5 - Alibaba's excellent instruction-following models
+            "Qwen/Qwen2.5-0.5B-Instruct-GGUF",           // ~0.4GB Q4, ultra-light
+            "Qwen/Qwen2.5-1.5B-Instruct-GGUF",           // ~1.1GB Q4, good balance
+            "Qwen/Qwen2.5-3B-Instruct-GGUF",             // ~2GB Q4, strong performer
+            
+            // Qwen 3 - Latest generation with thinking mode
+            "unsloth/Qwen3-4B-GGUF",                     // ~2.5GB Q4, 4B params, reasoning capable
+            
+            // Gemma 2 - Google's efficient models
+            "bartowski/gemma-2-2b-it-GGUF",              // ~1.5GB Q4, 2B params
+            
+            // Phi-3 - Microsoft's efficient models
+            "microsoft/Phi-3-mini-4k-instruct-gguf",     // ~2.2GB Q4, 3.8B params
+            
+            // SmolLM2 - HuggingFace's compact models
+            "bartowski/SmolLM2-1.7B-Instruct-GGUF",      // ~1.1GB Q4, efficient
+            
+            // TinyLlama - Ultra-compact chat model
+            "TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF",    // ~0.6GB Q4, very fast
+            
+            // ========== CODING SPECIALISTS ==========
+            // Qwen2.5-Coder - Best small coding models
+            "bartowski/Qwen2.5-Coder-1.5B-Instruct-GGUF", // ~1.1GB Q4, code completion
+            "bartowski/Qwen2.5-Coder-3B-Instruct-GGUF",   // ~2GB Q4, full coding assistant
+            "bartowski/Qwen2.5-Coder-7B-Instruct-GGUF",   // ~4.5GB Q4, advanced coding
+            
+            // DeepSeek Coder - Strong open-source coder
+            "TheBloke/deepseek-coder-1.3b-instruct-GGUF", // ~0.8GB Q4, fast coding
+            
+            // StarCoder2 - Code generation specialist
+            "bartowski/starcoder2-3b-GGUF",              // ~2GB Q4, multi-language code
+            
+            // ========== REASONING & MATH (DeepSeek R1 Distills) ==========
+            // DeepSeek R1 Distill - Reasoning capabilities from DeepSeek R1
+            "unsloth/DeepSeek-R1-Distill-Qwen-1.5B-GGUF", // ~1.1GB Q4, chain-of-thought
+            "unsloth/DeepSeek-R1-Distill-Qwen-7B-GGUF",   // ~4.5GB Q4, strong reasoning
+            
+            // ========== FAST/LIGHTWEIGHT (Low-end devices, 2-3GB RAM) ==========
+            // For devices with limited resources
+            "hugging-quants/Llama-3.2-1B-Instruct-Q8_0-GGUF",  // High quality 1B
+            "Qwen/Qwen2.5-0.5B-Instruct-GGUF",                  // Tiny but capable
+            
+            // ========== MULTILINGUAL ==========
+            // Strong non-English support
+            "Qwen/Qwen2.5-3B-Instruct-GGUF",             // 29+ languages
+            "bartowski/aya-expanse-8b-GGUF",             // ~5GB Q4, 23 languages (Cohere)
+            
+            // ========== LARGER MODELS (6GB+ RAM devices) ==========
+            // For flagship devices with more RAM
+            "TheBloke/Mistral-7B-Instruct-v0.2-GGUF",    // ~4.5GB Q4, strong 7B
+            "bartowski/Llama-3.1-8B-Instruct-GGUF",      // ~5GB Q4, Meta's 8B
+            "bartowski/gemma-2-9b-it-GGUF"               // ~5.5GB Q4, Google's 9B
         )
     }
     /**
@@ -334,14 +392,27 @@ class ModelRepository @Inject constructor(
     private fun detectPromptTemplate(repoId: String): String {
         val name = repoId.lowercase()
         return when {
-            name.contains("llama-3") -> "llama3"
+            // Llama family
+            name.contains("llama-3") || name.contains("llama3") -> "llama3"
             name.contains("llama-2") || name.contains("llama2") -> "llama2"
+            // Qwen family (includes Qwen3, Qwen2.5-Coder)
             name.contains("qwen") -> "chatml"
-            name.contains("phi-3") || name.contains("phi3") -> "phi3"
+            // DeepSeek family
+            name.contains("deepseek") -> "deepseek"
+            // Microsoft Phi
+            name.contains("phi-3") || name.contains("phi3") || name.contains("phi-4") -> "phi3"
+            // Google Gemma
             name.contains("gemma") -> "gemma"
-            name.contains("mistral") -> "mistral"
+            // Mistral/Mixtral
+            name.contains("mistral") || name.contains("mixtral") -> "mistral"
+            // Cohere Aya
+            name.contains("aya") -> "cohere"
+            // StarCoder
+            name.contains("starcoder") -> "starcoder"
+            // HuggingFace models
             name.contains("smollm") -> "chatml"
             name.contains("tinyllama") -> "chatml"
+            // Default to ChatML (most compatible)
             else -> "chatml"
         }
     }
@@ -354,10 +425,17 @@ class ModelRepository @Inject constructor(
             name.contains("16k") -> 16384
             name.contains("8k") -> 8192
             name.contains("4k") -> 4096
-            name.contains("qwen") -> 32768
-            name.contains("llama-3") -> 8192
+            // Model-specific defaults
+            name.contains("qwen3") -> 32768   // Qwen3 supports 32K natively
+            name.contains("qwen2.5") || name.contains("qwen2") -> 32768
+            name.contains("deepseek-r1") -> 32768
+            name.contains("llama-3.2") || name.contains("llama3.2") -> 8192
+            name.contains("llama-3.1") || name.contains("llama3.1") -> 8192
+            name.contains("gemma-2") -> 8192
             name.contains("phi-3") -> 4096
-            name.contains("gemma") -> 8192
+            name.contains("mistral") -> 8192
+            name.contains("starcoder") -> 8192
+            name.contains("aya") -> 8192
             else -> 4096
         }
     }
