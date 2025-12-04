@@ -2,12 +2,17 @@
  * llama_jni.cpp - JNI bridge for llama.cpp on Android
  * 
  * This file provides the native interface between Kotlin/Java and llama.cpp
+ * 
+ * Based on the official llama.cpp Android example:
+ * https://github.com/ggml-org/llama.cpp/tree/main/examples/llama.android
  */
 
 #include <jni.h>
 #include <android/log.h>
 #include <string>
 #include <vector>
+#include <cstdlib>
+#include <cstring>
 #include <thread>
 #include <atomic>
 #include <mutex>
@@ -21,19 +26,22 @@
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 #define LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
 
-// Helper functions for batch operations (inline implementation)
+// ============================================================================
+// Batch helper functions - matching official llama.cpp common.h implementation
+// ============================================================================
+
+// Clear a batch for reuse (just reset n_tokens counter)
 static void batch_clear(struct llama_batch & batch) {
     batch.n_tokens = 0;
 }
 
+// Add a token to the batch - matches common_batch_add from common.h
 static void batch_add(
         struct llama_batch & batch,
         llama_token id,
         llama_pos pos,
         llama_seq_id seq_id,
         bool logits) {
-    LOGD("batch_add: token=%d, pos=%d, seq_id=%d, logits=%d, n_tokens=%d", 
-         id, pos, seq_id, logits, batch.n_tokens);
     batch.token[batch.n_tokens] = id;
     batch.pos[batch.n_tokens] = pos;
     batch.n_seq_id[batch.n_tokens] = 1;
@@ -348,6 +356,8 @@ Java_com_localllm_app_inference_LlamaAndroid_generateNative(
     g_cancel_requested.store(false);
     std::string result;
     llama_sampler *sampler = nullptr;
+    llama_batch batch = {0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
+    bool batch_allocated = false;
     
     try {
         llama_context *ctx = reinterpret_cast<llama_context *>(ctx_ptr);
@@ -420,68 +430,72 @@ Java_com_localllm_app_inference_LlamaAndroid_generateNative(
         prompt_tokens.resize(n_prompt_tokens);
         LOGI("Prompt tokenized to %d tokens", n_prompt_tokens);
         
-        // Clear KV cache using seq_rm for sequence 0
-        // This is safer than llama_memory_clear and sufficient for single-sequence use
-        LOGI("Clearing KV cache for sequence 0...");
+        // Clear KV cache completely for fresh generation
+        LOGI("Clearing KV cache...");
         llama_memory_t mem = llama_get_memory(ctx);
         if (mem) {
-            // Remove all tokens from sequence 0 (our only sequence)
-            llama_memory_seq_rm(mem, 0, -1, -1);
-            LOGI("KV cache cleared for sequence 0");
+            llama_memory_clear(mem, false);  // false = keep structure, just clear data
+            LOGI("KV cache cleared");
         } else {
             LOGW("Could not get memory handle - proceeding without cache clear");
         }
         
-        // Get context size and validate
+        // Get context size and batch size
         int n_ctx = llama_n_ctx(ctx);
-        LOGI("Context size: %d", n_ctx);
+        int n_batch = llama_n_batch(ctx);
+        if (n_batch <= 0) n_batch = 512;
         
+        LOGI("Context size: %d, Batch size: %d", n_ctx, n_batch);
+
         if (n_prompt_tokens >= n_ctx) {
             LOGE("Prompt (%d tokens) exceeds context size (%d)", n_prompt_tokens, n_ctx);
             g_is_generating.store(false);
             return string_to_jstring(env, "Error: Prompt too long for context");
         }
+
+        // Allocate batch using official llama_batch_init API
+        // Allocate enough for at least the batch size
+        int batch_size = std::max(n_batch, n_prompt_tokens);
+        LOGI("Allocating batch with size %d using llama_batch_init", batch_size);
+        batch = llama_batch_init(batch_size, 0, 1);  // n_tokens, embd=0, n_seq_max=1
+        batch_allocated = true;
         
-        // Use llama_batch_get_one for simpler prompt processing
-        // This is the simplest and most reliable approach for single-sequence inference
-        // llama_batch_get_one automatically tracks positions
-        LOGI("Processing prompt with llama_batch_get_one...");
+        if (batch.token == nullptr) {
+            LOGE("Failed to allocate batch");
+            g_is_generating.store(false);
+            return string_to_jstring(env, "Error: Failed to allocate batch");
+        }
+        LOGI("Batch allocated successfully");
+
+        // Process prompt in chunks
+        LOGI("Processing prompt in batches...");
+        int n_cur = 0;  // Current position in KV cache
         
-        // Process in chunks to avoid memory issues
-        int n_batch = llama_n_batch(ctx);  // Get the batch size from context
-        if (n_batch <= 0) n_batch = 512;   // Fallback
-        LOGI("Using batch size: %d", n_batch);
-        
-        int n_processed = 0;
-        
-        while (n_processed < n_prompt_tokens) {
-            int n_eval = n_prompt_tokens - n_processed;
-            if (n_eval > n_batch) {
-                n_eval = n_batch;
+        for (int i = 0; i < n_prompt_tokens; i += n_batch) {
+            int n_eval = std::min(n_batch, n_prompt_tokens - i);
+            
+            // Clear and fill batch
+            batch_clear(batch);
+            for (int j = 0; j < n_eval; j++) {
+                // logits = true only for last token of the prompt
+                bool is_last = (i + j == n_prompt_tokens - 1);
+                batch_add(batch, prompt_tokens[i + j], n_cur + j, 0, is_last);
             }
             
-            LOGI("Evaluating tokens %d to %d (batch of %d)", n_processed, n_processed + n_eval - 1, n_eval);
+            LOGI("Processing prompt tokens %d to %d (batch of %d)", i, i + n_eval - 1, n_eval);
             
-            // Use llama_batch_get_one - it handles everything automatically
-            // Positions are tracked by llama_decode internally
-            llama_batch batch_chunk = llama_batch_get_one(prompt_tokens.data() + n_processed, n_eval);
-            
-            LOGI("Calling llama_decode for batch at position %d with %d tokens", n_processed, n_eval);
-            int ret = llama_decode(ctx, batch_chunk);
-            
-            // Note: llama_batch_get_one returns a stack-allocated batch that doesn't need freeing
-            
+            int ret = llama_decode(ctx, batch);
             if (ret != 0) {
-                LOGE("llama_decode failed at position %d with error %d", n_processed, ret);
+                LOGE("llama_decode failed during prompt processing at pos %d, error: %d", i, ret);
+                llama_batch_free(batch);
                 g_is_generating.store(false);
                 return string_to_jstring(env, "Error: Failed to process prompt");
             }
             
-            n_processed += n_eval;
-            LOGI("Processed %d/%d tokens", n_processed, n_prompt_tokens);
+            n_cur += n_eval;
         }
         
-        LOGI("Prompt processing complete");
+        LOGI("Prompt processing complete, n_cur=%d", n_cur);
         
         // Initialize sampler
         LOGI("Initializing sampler with temp=%.2f, top_p=%.2f, top_k=%d", 
@@ -489,6 +503,7 @@ Java_com_localllm_app_inference_LlamaAndroid_generateNative(
         sampler = llama_sampler_chain_init(llama_sampler_chain_default_params());
         if (sampler == nullptr) {
             LOGE("Failed to create sampler");
+            llama_batch_free(batch);
             g_is_generating.store(false);
             return string_to_jstring(env, "Error: Failed to create sampler");
         }
@@ -499,9 +514,7 @@ Java_com_localllm_app_inference_LlamaAndroid_generateNative(
         llama_sampler_chain_add(sampler, llama_sampler_init_dist(LLAMA_DEFAULT_SEED));
         
         // Generate tokens
-        int n_cur = n_prompt_tokens;
         char token_buf[256];
-        llama_token token_arr[1];  // Array for single token
         
         LOGI("Starting token generation, max_tokens=%d", max_tokens);
         
@@ -524,22 +537,19 @@ Java_com_localllm_app_inference_LlamaAndroid_generateNative(
             // Convert token to string
             int token_len = llama_token_to_piece(vocab, new_token, token_buf, sizeof(token_buf) - 1, 0, true);
             if (token_len > 0) {
-                token_buf[token_len] = '\0'; // Null terminate
+                token_buf[token_len] = '\0';
                 std::string token_str(token_buf, token_len);
                 result += token_str;
                 
-                // Call callback if provided - with exception handling
+                // Call callback if provided
                 if (callback_method != nullptr && callback != nullptr) {
                     jstring jtoken = string_to_jstring(env, token_str);
                     if (jtoken != nullptr) {
                         env->CallVoidMethod(callback, callback_method, jtoken);
-                        
-                        // Check for Java exceptions
                         if (env->ExceptionCheck()) {
                             LOGW("Exception in callback, clearing and continuing");
                             env->ExceptionClear();
                         }
-                        
                         env->DeleteLocalRef(jtoken);
                     }
                 }
@@ -555,21 +565,21 @@ Java_com_localllm_app_inference_LlamaAndroid_generateNative(
                 break;
             }
             
-            // Use llama_batch_get_one for the next token - simplest approach
-            token_arr[0] = new_token;
-            llama_batch token_batch = llama_batch_get_one(token_arr, 1);
+            // Prepare batch for next token decode
+            batch_clear(batch);
+            batch_add(batch, new_token, n_cur, 0, true);
             n_cur++;
             
-            // Decode the new token
-            int decode_result = llama_decode(ctx, token_batch);
+            int decode_result = llama_decode(ctx, batch);
             if (decode_result != 0) {
-                LOGE("Failed to decode during generation at token %d, error: %d", i, decode_result);
+                LOGE("Failed to decode token %d, error: %d", i, decode_result);
                 break;
             }
         }
         
-        LOGI("Generation complete, generated %zu chars in %d tokens", result.length(), n_cur - n_prompt_tokens);
+        LOGI("Generation complete, generated %zu chars", result.length());
         
+        if (batch_allocated) llama_batch_free(batch);
         if (sampler) llama_sampler_free(sampler);
         g_is_generating.store(false);
         
@@ -577,11 +587,13 @@ Java_com_localllm_app_inference_LlamaAndroid_generateNative(
         
     } catch (const std::exception& e) {
         LOGE("Exception during generation: %s", e.what());
+        if (batch_allocated) llama_batch_free(batch);
         if (sampler) llama_sampler_free(sampler);
         g_is_generating.store(false);
         return string_to_jstring(env, std::string("Error: ") + e.what());
     } catch (...) {
         LOGE("Unknown exception during generation");
+        if (batch_allocated) llama_batch_free(batch);
         if (sampler) llama_sampler_free(sampler);
         g_is_generating.store(false);
         return string_to_jstring(env, "Error: Unknown native error");
