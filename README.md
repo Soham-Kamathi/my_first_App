@@ -32,10 +32,60 @@ LocalLLM is an Android application that enables on-device inference of Large Lan
 
 ### 🚀 Core Features
 - **Local Inference** - Run LLMs entirely on-device using llama.cpp
-- **Model Library** - Browse, download, and manage GGUF models from Hugging Face
+- **Model Library** - Browse, download, and manage 25+ GGUF models from Hugging Face
 - **Streaming Responses** - Real-time token generation with live updates
 - **Conversation History** - Persistent chat history stored locally
 - **Multiple Conversations** - Create and manage multiple chat sessions
+
+### 🏠 Feature Hub (Home Screen)
+The app features a modern home screen with quick access to all capabilities:
+
+| Feature | Description |
+|---------|-------------|
+| **💬 AI Chat** | Full-featured ChatGPT-like conversations |
+| **🧪 Prompt Lab** | Experiment with prompts and parameters |
+| **🖼️ Ask Image** | Analyze images with vision-capable models |
+| **🎙️ Audio Scribe** | Record, transcribe, and summarize audio |
+| **📄 Document Chat** | Upload PDFs/docs and ask questions |
+| **💻 Code Companion** | Code explanation, debugging, and generation |
+| **📝 Templates** | Pre-made conversation starters |
+
+### 🎯 AI Chat Features
+- **Smart Context Management** - KV cache automatically managed per conversation
+- **Follow-up Queries** - Maintain context within the same conversation
+- **System Prompts** - Customize AI behavior per conversation
+- **Generation Stats** - See tokens/second and generation time
+
+### 🧪 Prompt Lab
+- Direct prompt input without conversation overhead
+- Real-time parameter adjustment (temperature, top-p, top-k)
+- Template selection for different models
+- Quick experimentation mode
+
+### 📄 Document Chat
+- **Supported Formats**: PDF, TXT, Markdown, Code files
+- **Smart Chunking**: Documents split intelligently for context fitting
+- **Q&A Interface**: Ask questions about uploaded documents
+- Powered by PDFBox for PDF text extraction
+
+### 💻 Code Companion
+- **Explain Code**: Get detailed explanations of code snippets
+- **Debug Code**: Find and fix bugs in your code
+- **Review Code**: Get suggestions for improvements
+- **Generate Code**: Create code from descriptions
+- **Convert Code**: Translate between programming languages
+
+### 🗣️ Text-to-Speech (TTS)
+- **Read Aloud**: Listen to AI responses
+- **Adjustable Speed**: Control speech rate (0.5x - 2.0x)
+- **Pitch Control**: Customize voice pitch
+- **Multiple Languages**: Support for various locales
+
+### 📤 Export & Sharing
+- **Plain Text Export**: Simple text format
+- **JSON Export**: Structured format for reimport
+- **Markdown Export**: Formatted with headers
+- **Share**: Send conversations to other apps
 
 ### 📱 User Experience
 - **Modern Material 3 UI** - Clean, intuitive interface following Material Design guidelines
@@ -47,15 +97,19 @@ LocalLLM is an Android application that enables on-device inference of Large Lan
 - **Memory-Mapped Loading** - Efficient model loading using mmap
 - **Multi-threaded Inference** - Utilizes all available CPU cores
 - **Customizable Generation** - Adjustable temperature, top-p, top-k, and repeat penalty
-- **Multiple Prompt Templates** - Support for various model formats (ChatML, Llama, Mistral, etc.)
+- **14 Prompt Templates** - Support for ChatML, Llama 2/3, Mistral, Phi, Gemma, and more
 
 ---
 
 ## Screenshots
 
-| Model Library | Chat Interface | Settings |
+| Home Screen | AI Chat | Model Library |
+|:-----------:|:-------:|:-------------:|
+| Feature hub with quick access | ChatGPT-like interface | Browse & download models |
+
+| Document Chat | Code Companion | Settings |
 |:-------------:|:--------------:|:--------:|
-| Browse and download models | Interact with loaded model | Customize generation parameters |
+| PDF/text Q&A | Code assistance | Generation parameters |
 
 ---
 
@@ -110,8 +164,8 @@ adb shell am start -n com.localllm.app/.MainActivity
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/localllm-android.git
-   cd localllm-android
+   git clone https://github.com/Soham-Kamathi/my_first_App.git
+   cd my_first_App
    ```
 
 2. **Clone llama.cpp into the cpp directory**
@@ -167,34 +221,76 @@ android {
 
 ## Supported Models
 
-LocalLLM supports any GGUF-format model compatible with llama.cpp. The app includes a curated list of mobile-optimized models:
+LocalLLM supports any GGUF-format model compatible with llama.cpp. The app includes a curated catalog of **25+ mobile-optimized models**:
 
-### Recommended for Mobile
+### Model Catalog
 
-| Model | Parameters | Size (Q4) | Min RAM | Description |
-|-------|------------|-----------|---------|-------------|
-| **Qwen 2.5 0.5B** | 0.5B | ~400 MB | 1 GB | Fastest, for low-end devices |
-| **Llama 3.2 1B** | 1B | ~750 MB | 1.5 GB | Meta's latest small model |
-| **Qwen 2.5 1.5B** | 1.5B | ~1 GB | 2 GB | Good quality/size balance |
-| **SmolLM2 1.7B** | 1.7B | ~1.1 GB | 2 GB | HuggingFace's compact model |
-| **TinyLlama 1.1B** | 1.1B | ~670 MB | 1.5 GB | Classic small model |
-| **Gemma 2 2B** | 2B | ~1.6 GB | 2.5 GB | Google's model |
-| **Llama 3.2 3B** | 3B | ~2 GB | 3 GB | Better quality |
-| **Phi-3 Mini** | 3.8B | ~2.3 GB | 3.5 GB | Microsoft's reasoning model |
+#### Qwen 2.5 Family (ChatML)
+| Model | Size | Min RAM | Best For |
+|-------|------|---------|----------|
+| Qwen 2.5 0.5B | ~400 MB | 1 GB | Ultra-fast, low-end devices |
+| Qwen 2.5 1.5B | ~1 GB | 2 GB | Balanced quality/speed |
+| Qwen 2.5 3B | ~2 GB | 3 GB | Better quality |
+| Qwen 2.5 Coder 1.5B | ~1 GB | 2 GB | Code generation |
+| Qwen 2.5 Coder 3B | ~2 GB | 3 GB | Advanced coding |
+
+#### Llama 3.2 Family (Llama3)
+| Model | Size | Min RAM | Best For |
+|-------|------|---------|----------|
+| Llama 3.2 1B | ~750 MB | 1.5 GB | Meta's compact model |
+| Llama 3.2 3B | ~2 GB | 3 GB | Quality conversations |
+
+#### SmolLM2 Family (ChatML)
+| Model | Size | Min RAM | Best For |
+|-------|------|---------|----------|
+| SmolLM2 135M | ~100 MB | 512 MB | Extremely fast |
+| SmolLM2 360M | ~250 MB | 768 MB | Very fast |
+| SmolLM2 1.7B | ~1.1 GB | 2 GB | Good balance |
+
+#### Microsoft Phi Family
+| Model | Size | Min RAM | Best For |
+|-------|------|---------|----------|
+| Phi-3 Mini 3.8B | ~2.3 GB | 3.5 GB | Reasoning |
+| Phi-4 Mini 3.8B | ~2.4 GB | 3.5 GB | Latest reasoning |
+
+#### Other Notable Models
+| Model | Size | Min RAM | Best For |
+|-------|------|---------|----------|
+| Gemma 2 2B | ~1.6 GB | 2.5 GB | Google's model |
+| DeepSeek 1.3B | ~900 MB | 1.5 GB | General purpose |
+| TinyLlama 1.1B | ~670 MB | 1.5 GB | Classic small model |
+| StarCoder2 3B | ~2 GB | 3 GB | Code completion |
+| Aya Expanse 8B | ~5 GB | 6 GB | Multilingual |
+| OpenHermes 2.5 Mistral | ~4.4 GB | 5 GB | Instruction following |
 
 ### Quantization Formats
 
-The app prioritizes mobile-friendly quantizations:
-- **Q4_K_M** - Best balance of size and quality (recommended)
-- **Q4_K_S** - Slightly smaller, minor quality loss
-- **Q3_K_M** - Smaller but noticeable quality loss
-- **Q5_K_M** - Better quality, larger size
+| Format | Quality | Size | Recommended |
+|--------|---------|------|-------------|
+| Q8_0 | Excellent | Large | High-end devices |
+| Q6_K | Very Good | Medium-Large | Good devices |
+| Q5_K_M | Good | Medium | Balanced |
+| **Q4_K_M** | Decent | **Small** | **Recommended** |
+| Q4_K_S | Decent | Smaller | Memory constrained |
+| Q3_K_M | Lower | Very Small | Very limited RAM |
+| Q2_K | Lowest | Smallest | Ultra-constrained |
 
-### Using Custom Models
+### Prompt Templates Supported
 
-1. Download any GGUF model from Hugging Face
-2. Place it in your device's storage
-3. The app will detect compatible models
+| Template | Models |
+|----------|--------|
+| `chatml` | Qwen, SmolLM, TinyLlama, OpenHermes |
+| `llama2` | Llama 2 family |
+| `llama3` | Llama 3, 3.1, 3.2 |
+| `mistral` | Mistral, Mixtral |
+| `phi3` | Phi-3, Phi-4 |
+| `gemma` | Gemma 1, 2 |
+| `alpaca` | Alpaca-style |
+| `vicuna` | Vicuna models |
+| `zephyr` | Zephyr, Notus |
+| `deepseek` | DeepSeek |
+| `cohere` | Cohere Aya |
+| `starcoder` | StarCoder |
 
 ---
 
@@ -207,28 +303,47 @@ app/
 ├── src/main/
 │   ├── java/com/localllm/app/
 │   │   ├── data/                    # Data layer
-│   │   │   ├── local/               # Room database
-│   │   │   ├── model/               # Data models
+│   │   │   ├── local/               # Room database, DAOs
+│   │   │   ├── model/               # Data classes
 │   │   │   ├── remote/              # Hugging Face API
-│   │   │   └── repository/          # Data repositories
-│   │   ├── di/                      # Hilt dependency injection
-│   │   ├── domain/                  # Use cases
-│   │   ├── inference/               # LLM inference engine
-│   │   │   ├── InferenceEngine.kt   # Text generation
-│   │   │   ├── LlamaAndroid.kt      # JNI wrapper
+│   │   │   └── repository/          # Repositories
+│   │   ├── di/                      # Hilt DI modules
+│   │   │   ├── DatabaseModule.kt
+│   │   │   ├── NetworkModule.kt
+│   │   │   ├── RepositoryModule.kt
+│   │   │   └── InferenceModule.kt
+│   │   ├── domain/usecase/          # Business logic
+│   │   ├── inference/               # LLM inference
+│   │   │   ├── InferenceEngine.kt   # Prompt building, generation
+│   │   │   ├── LlamaAndroid.kt      # JNI bridge
 │   │   │   └── ModelManager.kt      # Model lifecycle
-│   │   ├── ui/                      # Compose UI
-│   │   │   ├── components/          # Reusable components
-│   │   │   ├── screen/              # Screen composables
+│   │   ├── ui/
+│   │   │   ├── components/          # Reusable UI components
+│   │   │   ├── navigation/          # Navigation setup
+│   │   │   ├── screen/              # All screens
+│   │   │   │   ├── HomeScreen.kt
+│   │   │   │   ├── ChatScreen.kt
+│   │   │   │   ├── PromptLabScreen.kt
+│   │   │   │   ├── AskImageScreen.kt
+│   │   │   │   ├── AudioScribeScreen.kt
+│   │   │   │   ├── DocumentChatScreen.kt
+│   │   │   │   ├── CodeCompanionScreen.kt
+│   │   │   │   ├── ConversationTemplatesScreen.kt
+│   │   │   │   ├── ModelLibraryScreen.kt
+│   │   │   │   └── SettingsScreen.kt
 │   │   │   ├── theme/               # Material theme
 │   │   │   └── viewmodel/           # ViewModels
-│   │   └── util/                    # Utilities
+│   │   ├── util/                    # Utilities
+│   │   │   ├── TtsManager.kt        # Text-to-Speech
+│   │   │   ├── DocumentParser.kt    # PDF/text parsing
+│   │   │   └── ConversationExporter.kt
+│   │   └── worker/                  # Background tasks
 │   ├── cpp/                         # Native code
-│   │   ├── CMakeLists.txt           # CMake configuration
-│   │   ├── llama_jni.cpp            # JNI bridge
+│   │   ├── CMakeLists.txt
+│   │   ├── llama_jni.cpp            # JNI implementation
 │   │   └── llama.cpp/               # llama.cpp library
 │   └── res/                         # Resources
-└── build.gradle.kts                 # Build configuration
+└── build.gradle.kts
 ```
 
 ### Tech Stack
@@ -236,57 +351,47 @@ app/
 | Component | Technology |
 |-----------|------------|
 | **Language** | Kotlin 1.9.20 |
-| **UI Framework** | Jetpack Compose with Material 3 |
+| **UI Framework** | Jetpack Compose + Material 3 |
 | **Architecture** | MVVM + Clean Architecture |
 | **Dependency Injection** | Hilt 2.48.1 |
 | **Database** | Room 2.6.1 |
+| **Preferences** | DataStore |
 | **Networking** | Retrofit 2 + OkHttp |
 | **Native** | llama.cpp via JNI |
-| **Build** | Gradle 8.9 with KSP |
+| **Build** | Gradle 8.9 + KSP |
+| **PDF Parsing** | PDFBox Android |
 
-### Data Flow
+### Key Components
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                         UI Layer                             │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
-│  │ ChatScreen  │  │ModelLibrary │  │  SettingsScreen     │  │
-│  └──────┬──────┘  └──────┬──────┘  └──────────┬──────────┘  │
-│         │                │                     │             │
-│  ┌──────▼──────┐  ┌──────▼──────┐  ┌──────────▼──────────┐  │
-│  │ChatViewModel│  │ModelLibrary │  │  SettingsViewModel  │  │
-│  │             │  │  ViewModel  │  │                     │  │
-│  └──────┬──────┘  └──────┬──────┘  └──────────┬──────────┘  │
-└─────────┼────────────────┼────────────────────┼─────────────┘
-          │                │                    │
-┌─────────▼────────────────▼────────────────────▼─────────────┐
-│                       Domain Layer                           │
-│  ┌────────────────┐  ┌─────────────────┐  ┌──────────────┐  │
-│  │ GenerateText   │  │DownloadModel    │  │ GetSettings  │  │
-│  │   UseCase      │  │   UseCase       │  │   UseCase    │  │
-│  └────────┬───────┘  └────────┬────────┘  └──────┬───────┘  │
-└───────────┼───────────────────┼──────────────────┼──────────┘
-            │                   │                  │
-┌───────────▼───────────────────▼──────────────────▼──────────┐
-│                        Data Layer                            │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────┐  │
-│  │ InferenceEngine │  │ ModelRepository │  │SettingsRepo │  │
-│  └────────┬────────┘  └────────┬────────┘  └──────┬──────┘  │
-│           │                    │                  │          │
-│  ┌────────▼────────┐  ┌────────▼────────┐  ┌─────▼──────┐  │
-│  │  LlamaAndroid   │  │  Room Database  │  │ DataStore  │  │
-│  │    (JNI)        │  │  + HuggingFace  │  │            │  │
-│  └────────┬────────┘  └─────────────────┘  └────────────┘  │
-└───────────┼─────────────────────────────────────────────────┘
-            │
-┌───────────▼─────────────────────────────────────────────────┐
-│                       Native Layer                           │
+│  ┌─────────┐ ┌─────────┐ ┌──────────┐ ┌─────────────────┐  │
+│  │  Home   │ │  Chat   │ │ PromptLab│ │ DocumentChat    │  │
+│  │ Screen  │ │ Screen  │ │  Screen  │ │    Screen       │  │
+│  └────┬────┘ └────┬────┘ └────┬─────┘ └────────┬────────┘  │
+│       │          │           │                 │           │
+│  ┌────▼────┐ ┌───▼────┐ ┌────▼─────┐ ┌────────▼────────┐  │
+│  │  Home   │ │  Chat  │ │PromptLab │ │  DocumentChat   │  │
+│  │ViewModel│ │ViewModel│ │ ViewModel│ │   ViewModel     │  │
+│  └─────────┘ └────┬───┘ └──────────┘ └─────────────────┘  │
+└───────────────────┼─────────────────────────────────────────┘
+                    │
+┌───────────────────▼─────────────────────────────────────────┐
+│                     Inference Layer                          │
+│  ┌─────────────────┐ ┌─────────────────┐ ┌───────────────┐  │
+│  │ InferenceEngine │ │  ModelManager   │ │ LlamaAndroid  │  │
+│  │ • buildPrompt() │ │ • loadModel()   │ │ • JNI Bridge  │  │
+│  │ • generateStream│ │ • clearKVCache()│ │ • Native calls│  │
+│  └─────────────────┘ └─────────────────┘ └───────┬───────┘  │
+└──────────────────────────────────────────────────┼──────────┘
+                                                   │
+┌──────────────────────────────────────────────────▼──────────┐
+│                      Native Layer (C++)                      │
 │  ┌─────────────────────────────────────────────────────┐    │
 │  │                    llama.cpp                         │    │
-│  │  ┌───────────┐  ┌───────────┐  ┌─────────────────┐  │    │
-│  │  │   Model   │  │  Context  │  │    Sampler      │  │    │
-│  │  │  Loading  │  │  Manager  │  │    Pipeline     │  │    │
-│  │  └───────────┘  └───────────┘  └─────────────────┘  │    │
+│  │  • Model loading    • Token generation               │    │
+│  │  • KV cache mgmt    • Sampling (temp, top-p, top-k)  │    │
 │  └─────────────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -321,7 +426,7 @@ Each conversation can have a custom system prompt. Default templates:
 ### App Crashes on Model Load
 
 1. **Check available RAM** - Close other apps to free memory
-2. **Try a smaller model** - Start with Qwen 0.5B
+2. **Try a smaller model** - Start with Qwen 0.5B or SmolLM2 135M
 3. **Check logs**: 
    ```bash
    adb logcat | grep -E "LlamaJNI|ModelManager|llama"
@@ -338,6 +443,14 @@ Each conversation can have a custom system prompt. Default templates:
 1. **Reduce context size** - Lower values use less memory
 2. **Use smaller quantization** - Q4_K_S instead of Q4_K_M
 3. **Reduce thread count** - Sometimes fewer threads = faster
+4. **Use smaller model** - SmolLM2 is very fast
+
+### Context/Hallucination Issues
+
+The app automatically manages KV cache:
+- **Same conversation**: Context preserved for follow-ups ✓
+- **Different conversation**: Cache cleared automatically ✓
+- **New conversation**: Fresh start with no previous context ✓
 
 ### Native Library Not Loading
 
@@ -381,6 +494,9 @@ llamaAndroid.generateTokens(
     }
 )
 
+// Clear KV cache (when switching conversations)
+llamaAndroid.clearKVCache(contextPtr)
+
 // Cleanup
 llamaAndroid.freeModel(contextPtr)
 llamaAndroid.freeBackend()
@@ -406,6 +522,38 @@ inferenceEngine.generateStream(
 }
 ```
 
+### TtsManager
+
+```kotlin
+// Speak text
+ttsManager.speak("Hello, I am your AI assistant!")
+
+// Adjust settings
+ttsManager.updateConfig(TtsConfig(
+    speechRate = 1.2f,
+    pitch = 1.0f,
+    language = Locale.US
+))
+
+// Stop speaking
+ttsManager.stop()
+```
+
+### DocumentParser
+
+```kotlin
+// Parse a document
+val result = documentParser.parseDocument(uri, fileName)
+result.onSuccess { doc ->
+    println("Content: ${doc.content}")
+    println("Pages: ${doc.pageCount}")
+    println("Words: ${doc.wordCount}")
+}
+
+// Chunk for RAG-style querying
+val chunks = documentParser.chunkText(doc.content, chunkSize = 1000)
+```
+
 ---
 
 ## Performance Tips
@@ -414,7 +562,17 @@ inferenceEngine.generateStream(
 2. **Optimize thread count** - Usually `cores - 1` is best
 3. **Reduce context size** - Only use what you need
 4. **Quantization matters** - Q4_K_M offers best speed/quality ratio
-5. **Clear KV cache** - Start new conversations to free memory
+5. **Smart model selection** - Match model size to your device RAM
+6. **Clear KV cache** - Handled automatically per conversation
+
+### Device Recommendations
+
+| Device RAM | Recommended Models |
+|------------|-------------------|
+| 2-3 GB | SmolLM2 135M/360M, Qwen 0.5B |
+| 4 GB | Qwen 1.5B, SmolLM2 1.7B, Llama 3.2 1B |
+| 6 GB | Qwen 3B, Llama 3.2 3B, Phi-3 Mini |
+| 8+ GB | Any model in catalog |
 
 ---
 
@@ -423,10 +581,11 @@ inferenceEngine.generateStream(
 LocalLLM is designed with privacy as a core principle:
 
 - ✅ **All inference runs locally** - No data sent to external servers
-- ✅ **Conversations stored locally** - In encrypted Room database
+- ✅ **Conversations stored locally** - In Room database on device
 - ✅ **No analytics or tracking** - Your usage is completely private
 - ✅ **No account required** - Use the app without signing up
-- ⚠️ **Model downloads** - Fetched from Hugging Face (metadata only)
+- ✅ **Export your data** - Full control over your conversations
+- ⚠️ **Model downloads** - Fetched from Hugging Face (one-time)
 
 ---
 
@@ -444,7 +603,8 @@ Contributions are welcome! Please follow these steps:
 
 1. Clone and open in Android Studio
 2. Sync Gradle files
-3. Run on emulator or device
+3. Clone llama.cpp into `app/src/main/cpp/`
+4. Run on emulator or device
 
 ### Code Style
 
@@ -452,6 +612,13 @@ Contributions are welcome! Please follow these steps:
 - Use meaningful variable/function names
 - Add KDoc comments for public APIs
 - Write unit tests for new features
+
+---
+
+## Documentation
+
+For detailed technical documentation, see:
+- **[TECHNICAL_DOCUMENTATION.md](TECHNICAL_DOCUMENTATION.md)** - Comprehensive 1400+ line technical guide covering architecture, native code, data layer, inference engine, and more.
 
 ---
 
@@ -465,6 +632,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Jetpack Compose** - Apache 2.0 License
 - **Material Icons** - Apache 2.0 License
 - **OkHttp/Retrofit** - Apache 2.0 License
+- **PDFBox** - Apache 2.0 License
 
 ---
 
@@ -474,16 +642,28 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Hugging Face](https://huggingface.co) - Model hosting and API
 - [Google](https://developer.android.com) - Android SDK and Jetpack
 - All the open-source model creators
+- [Google AI Edge Gallery](https://github.com/google-ai-edge/gallery) - Design inspiration
 
 ---
 
 ## Roadmap
 
-- [ ] GPU acceleration (Vulkan/OpenCL)
-- [ ] Voice input/output
+### Completed ✅
+- [x] Home screen feature hub
+- [x] Document Chat with PDF support
+- [x] Code Companion
+- [x] Conversation Templates
+- [x] Text-to-Speech
+- [x] Export & Sharing
+- [x] Smart KV cache management
+- [x] 25+ model catalog
+
+### Planned 📋
+- [ ] GPU acceleration (Vulkan)
+- [ ] Voice input (Speech-to-Text)
 - [ ] Image understanding (multimodal models)
+- [ ] RAG with vector embeddings
 - [ ] Model fine-tuning on device
-- [ ] Conversation export/import
 - [ ] Widgets and quick actions
 - [ ] Wear OS companion app
 
