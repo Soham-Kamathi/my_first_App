@@ -346,35 +346,24 @@ private fun FeaturesGrid(
     Column(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            FeatureCardItem(
-                feature = features[0],
-                onClick = { onFeatureClick(features[0]) },
-                modifier = Modifier.weight(1f)
-            )
-            FeatureCardItem(
-                feature = features[1],
-                onClick = { onFeatureClick(features[1]) },
-                modifier = Modifier.weight(1f)
-            )
-        }
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            FeatureCardItem(
-                feature = features[2],
-                onClick = { onFeatureClick(features[2]) },
-                modifier = Modifier.weight(1f)
-            )
-            FeatureCardItem(
-                feature = features[3],
-                onClick = { onFeatureClick(features[3]) },
-                modifier = Modifier.weight(1f)
-            )
+        // Display all features in rows of 2
+        features.chunked(2).forEach { rowFeatures ->
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                rowFeatures.forEach { feature ->
+                    FeatureCardItem(
+                        feature = feature,
+                        onClick = { onFeatureClick(feature) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                // Add empty spacer if odd number of features in last row
+                if (rowFeatures.size == 1) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
         }
     }
 }
