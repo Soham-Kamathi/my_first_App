@@ -22,6 +22,17 @@
     
     <!-- Notification permission for download progress -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    
+    <!-- Audio permissions for Audio Scribe -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    
+    <!-- Camera permission for Ask Image -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    
+    <!-- Feature declarations -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+    <uses-feature android:name="android.hardware.microphone" android:required="false" />
 
     <application
         android:name=".LocalLLMApplication"

@@ -41,6 +41,7 @@ fun ChatScreen(
     onNavigateToModels: () -> Unit,
     onNavigateToHistory: () -> Unit,
     onNavigateToSettings: () -> Unit,
+    onNavigateBack: () -> Unit = {},
     viewModel: ChatViewModel = hiltViewModel()
 ) {
     val messages by viewModel.messages.collectAsState()
@@ -96,7 +97,8 @@ fun ChatScreen(
                 },
                 onStopGeneration = { viewModel.stopGeneration() }
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -107,7 +109,9 @@ fun ChatScreen(
             if (modelLoadingState is ModelLoadingState.Loading) {
                 LinearProgressIndicator(
                     progress = (modelLoadingState as ModelLoadingState.Loading).progress,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant
                 )
             }
             
@@ -128,8 +132,8 @@ fun ChatScreen(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth(),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     itemsIndexed(
                         items = messages,
@@ -196,56 +200,75 @@ private fun ChatTopBar(
     onSettingsClick: () -> Unit,
     onNewChatClick: () -> Unit
 ) {
-    TopAppBar(
+    CenterAlignedTopAppBar(
         title = {
-            Column {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = modelName ?: "No Model",
+                    text = modelName ?: "LocalLLM",
+                    style = MaterialTheme.typography.titleMedium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                when (modelLoadingState) {
-                    is ModelLoadingState.Loading -> {
+                if (modelLoadingState is ModelLoadingState.Loading) {
+                    Text(
+                        text = "Loading...",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                } else if (isModelLoaded) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primary)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "Loading...",
-                            style = MaterialTheme.typography.bodySmall,
+                            text = "Ready",
+                            style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    is ModelLoadingState.Loaded -> {
-                        Text(
-                            text = "Ready",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                    is ModelLoadingState.Error -> {
-                        Text(
-                            text = "Error",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-                    else -> {}
                 }
             }
         },
         navigationIcon = {
             IconButton(onClick = onHistoryClick) {
-                Icon(Icons.Default.Menu, contentDescription = "History")
+                Icon(
+                    Icons.Default.Menu, 
+                    contentDescription = "History",
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
             }
         },
         actions = {
             IconButton(onClick = onNewChatClick) {
-                Icon(Icons.Default.Add, contentDescription = "New Chat")
+                Icon(
+                    Icons.Default.Add, 
+                    contentDescription = "New Chat",
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
             }
             IconButton(onClick = onModelClick) {
-                Icon(Icons.Default.Memory, contentDescription = "Models")
+                Icon(
+                    Icons.Outlined.Memory, 
+                    contentDescription = "Models",
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
             }
             IconButton(onClick = onSettingsClick) {
-                Icon(Icons.Default.Settings, contentDescription = "Settings")
+                Icon(
+                    Icons.Outlined.Settings, 
+                    contentDescription = "Settings",
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
             }
-        }
+        },
+        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+            containerColor = MaterialTheme.colorScheme.background,
+            scrolledContainerColor = MaterialTheme.colorScheme.surface
+        )
     )
 }
 

@@ -103,6 +103,13 @@ class ChatViewModel @Inject constructor(
      * Set the current conversation and load its messages.
      */
     fun setCurrentConversation(conversationId: String) {
+        // Only clear KV cache when switching to a DIFFERENT conversation
+        // This preserves context for follow-up queries within the same conversation
+        val previousConversationId = _currentConversationId.value
+        if (previousConversationId != null && previousConversationId != conversationId) {
+            modelManager.clearKVCache()
+        }
+        
         _currentConversationId.value = conversationId
         
         viewModelScope.launch {
@@ -124,14 +131,12 @@ class ChatViewModel @Inject constructor(
         if (text.isBlank() || conversationId == null || isGenerating) return
 
         viewModelScope.launch {
-            // Add user message
-            val userMessage = sendMessageUseCase(
+            // Add user message to database (flow will update _messages automatically)
+            sendMessageUseCase(
                 conversationId = conversationId,
                 content = text.trim(),
                 role = MessageRole.USER
             )
-            
-            _messages.value = _messages.value + userMessage
 
             // Generate AI response
             generateResponse(conversationId)
@@ -149,6 +154,9 @@ class ChatViewModel @Inject constructor(
 
         generationJob = viewModelScope.launch {
             _generationState.value = GenerationState.Loading
+            
+            // Get completed messages for this conversation
+            val completedMessages = _messages.value.filter { it.isComplete }
 
             // Create placeholder assistant message
             val assistantMessage = ChatMessage(
@@ -168,7 +176,7 @@ class ChatViewModel @Inject constructor(
             
             // Build prompt from conversation history
             val prompt = inferenceEngine.buildPrompt(
-                messages = _messages.value.filter { it.isComplete },
+                messages = completedMessages,
                 systemPrompt = preferences.defaultSystemPrompt,
                 promptTemplate = model?.promptTemplate ?: "chatml"
             )

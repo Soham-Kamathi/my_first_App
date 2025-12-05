@@ -17,64 +17,60 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import com.localllm.app.data.model.AppTheme
 
-// Primary colors - Modern purple/violet
-private val Purple80 = Color(0xFFD0BCFF)
-private val PurpleGrey80 = Color(0xFFCCC2DC)
-private val Pink80 = Color(0xFFEFB8C8)
+// Primary colors - Professional Indigo/Slate
+private val PrimaryLight = Color(0xFF4F46E5) // Indigo 600
+private val PrimaryDark = Color(0xFF818CF8)  // Indigo 400
+private val SecondaryLight = Color(0xFF64748B) // Slate 500
+private val SecondaryDark = Color(0xFF94A3B8)  // Slate 400
+private val TertiaryLight = Color(0xFF0EA5E9) // Sky 500
+private val TertiaryDark = Color(0xFF38BDF8)  // Sky 400
 
-private val Purple40 = Color(0xFF6650a4)
-private val PurpleGrey40 = Color(0xFF625b71)
-private val Pink40 = Color(0xFF7D5260)
+// Backgrounds
+private val BackgroundLight = Color(0xFFF8FAFC) // Slate 50
+private val BackgroundDark = Color(0xFF0F172A)  // Slate 900
+private val SurfaceLight = Color(0xFFFFFFFF)
+private val SurfaceDark = Color(0xFF1E293B)     // Slate 800
+private val SurfaceVariantLight = Color(0xFFF1F5F9) // Slate 100
+private val SurfaceVariantDark = Color(0xFF334155)  // Slate 700
 
-// Custom colors for the app
-private val DarkBackground = Color(0xFF121212)
-private val DarkSurface = Color(0xFF1E1E1E)
-private val DarkSurfaceVariant = Color(0xFF2D2D2D)
-
-private val LightBackground = Color(0xFFFFFBFE)
-private val LightSurface = Color(0xFFFFFBFE)
-private val LightSurfaceVariant = Color(0xFFE7E0EC)
-
-// Semantic colors
-val SuccessGreen = Color(0xFF4CAF50)
-val WarningOrange = Color(0xFFFF9800)
-val ErrorRed = Color(0xFFF44336)
-val InfoBlue = Color(0xFF2196F3)
-
-// Message bubble colors
-val UserMessageBackground = Color(0xFF6650a4)
-val UserMessageBackgroundDark = Color(0xFF4A3C7A)
-val AssistantMessageBackground = Color(0xFFE7E0EC)
-val AssistantMessageBackgroundDark = Color(0xFF2D2D2D)
+// Message Colors
+val UserMessageBackground = PrimaryLight
+val UserMessageBackgroundDark = PrimaryDark
+val AssistantMessageBackground = SurfaceVariantLight
+val AssistantMessageBackgroundDark = SurfaceVariantDark
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80,
-    background = DarkBackground,
-    surface = DarkSurface,
-    surfaceVariant = DarkSurfaceVariant,
-    onPrimary = Color.Black,
-    onSecondary = Color.Black,
-    onTertiary = Color.Black,
-    onBackground = Color.White,
-    onSurface = Color.White,
-    onSurfaceVariant = Color(0xFFCAC4D0)
+    primary = PrimaryDark,
+    onPrimary = Color(0xFF1E1B4B), // Indigo 950
+    primaryContainer = Color(0xFF312E81), // Indigo 900
+    onPrimaryContainer = Color(0xFFE0E7FF), // Indigo 100
+    secondary = SecondaryDark,
+    onSecondary = Color(0xFF0F172A), // Slate 900
+    tertiary = TertiaryDark,
+    background = BackgroundDark,
+    onBackground = Color(0xFFF8FAFC), // Slate 50
+    surface = SurfaceDark,
+    onSurface = Color(0xFFF8FAFC),
+    surfaceVariant = SurfaceVariantDark,
+    onSurfaceVariant = Color(0xFFCBD5E1), // Slate 300
+    outline = Color(0xFF64748B) // Slate 500
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40,
-    background = LightBackground,
-    surface = LightSurface,
-    surfaceVariant = LightSurfaceVariant,
+    primary = PrimaryLight,
     onPrimary = Color.White,
+    primaryContainer = Color(0xFFE0E7FF), // Indigo 100
+    onPrimaryContainer = Color(0xFF312E81), // Indigo 900
+    secondary = SecondaryLight,
     onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    onSurfaceVariant = Color(0xFF49454F)
+    tertiary = TertiaryLight,
+    background = BackgroundLight,
+    onBackground = Color(0xFF0F172A), // Slate 900
+    surface = SurfaceLight,
+    onSurface = Color(0xFF0F172A),
+    surfaceVariant = SurfaceVariantLight,
+    onSurfaceVariant = Color(0xFF475569), // Slate 600
+    outline = Color(0xFF94A3B8) // Slate 400
 )
 
 @Composable

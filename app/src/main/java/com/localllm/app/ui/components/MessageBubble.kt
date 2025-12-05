@@ -43,13 +43,13 @@ fun MessageBubble(
         // Message bubble
         Surface(
             modifier = Modifier
-                .widthIn(max = 320.dp)
+                .widthIn(max = 340.dp)
                 .clip(
                     RoundedCornerShape(
-                        topStart = 16.dp,
-                        topEnd = 16.dp,
-                        bottomStart = if (isUser) 16.dp else 4.dp,
-                        bottomEnd = if (isUser) 4.dp else 16.dp
+                        topStart = 20.dp,
+                        topEnd = 20.dp,
+                        bottomStart = if (isUser) 20.dp else 4.dp,
+                        bottomEnd = if (isUser) 4.dp else 20.dp
                     )
                 ),
             color = if (isUser) {
@@ -60,22 +60,24 @@ fun MessageBubble(
             onClick = { showActions = !showActions }
         ) {
             Column(
-                modifier = Modifier.padding(12.dp)
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
                 // Role label for assistant
                 if (!isUser) {
                     Text(
                         text = "Assistant",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(bottom = 4.dp)
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
                 }
                 
                 // Message content
                 Text(
                     text = message.content.ifBlank { "..." },
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.2f
+                    ),
                     color = if (isUser) {
                         MaterialTheme.colorScheme.onPrimary
                     } else {
@@ -93,13 +95,13 @@ fun MessageBubble(
                             Icons.Outlined.Speed,
                             contentDescription = null,
                             modifier = Modifier.size(12.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "${message.tokensGenerated} tokens • ${String.format("%.1f", message.tokensPerSecond())} t/s",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                         )
                     }
                 }
