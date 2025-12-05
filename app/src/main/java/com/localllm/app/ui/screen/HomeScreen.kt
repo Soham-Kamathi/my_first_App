@@ -54,6 +54,8 @@ fun HomeScreen(
     onNavigateToDocumentChat: () -> Unit = {},
     onNavigateToCodeCompanion: () -> Unit = {},
     onNavigateToTemplates: () -> Unit = {},
+    onNavigateToFlashcards: () -> Unit = {},
+    onNavigateToQuiz: () -> Unit = {},
     onNavigateToModels: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToHistory: () -> Unit,
@@ -100,10 +102,26 @@ fun HomeScreen(
             FeatureCard(
                 id = "templates",
                 title = "Templates",
-                description = "Pre-built conversation starters",
+                description = "50+ pre-built conversation starters",
                 icon = Icons.Outlined.Dashboard,
                 gradient = listOf(Color(0xFF14B8A6), Color(0xFF0D9488)),
                 route = "templates"
+            ),
+            FeatureCard(
+                id = "flashcards",
+                title = "Flashcards",
+                description = "AI-generated study flashcards",
+                icon = Icons.Outlined.Style,
+                gradient = listOf(Color(0xFFF97316), Color(0xFFEA580C)),
+                route = "flashcards"
+            ),
+            FeatureCard(
+                id = "quiz",
+                title = "Quiz Generator",
+                description = "Create and take AI-powered quizzes",
+                icon = Icons.Outlined.Quiz,
+                gradient = listOf(Color(0xFFEC4899), Color(0xFFDB2777)),
+                route = "quiz"
             ),
             FeatureCard(
                 id = "ask_image",
@@ -170,6 +188,8 @@ fun HomeScreen(
                             "document_chat" -> onNavigateToDocumentChat()
                             "code_companion" -> onNavigateToCodeCompanion()
                             "templates" -> onNavigateToTemplates()
+                            "flashcards" -> onNavigateToFlashcards()
+                            "quiz" -> onNavigateToQuiz()
                             "ask_image" -> onNavigateToAskImage()
                             "audio_scribe" -> onNavigateToAudioScribe()
                         }

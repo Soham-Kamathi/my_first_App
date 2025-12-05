@@ -11,6 +11,7 @@ import com.localllm.app.data.model.MessageRole
 import com.localllm.app.data.model.ModelInfo
 import com.localllm.app.data.model.UserPreferences
 import com.localllm.app.data.local.PreferencesDataStore
+import com.localllm.app.data.remote.WebSearchService
 import com.localllm.app.data.repository.ConversationRepository
 import com.localllm.app.domain.usecase.CreateConversationUseCase
 import com.localllm.app.domain.usecase.GenerateConversationTitleUseCase
@@ -20,6 +21,7 @@ import com.localllm.app.domain.usecase.UpdateMessageUseCase
 import com.localllm.app.inference.InferenceEngine
 import com.localllm.app.inference.ModelLoadingState
 import com.localllm.app.inference.ModelManager
+import com.localllm.app.util.ThinkingModeParser
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -43,6 +45,7 @@ class ChatViewModel @Inject constructor(
     private val modelManager: ModelManager,
     private val conversationRepository: ConversationRepository,
     private val preferencesDataStore: PreferencesDataStore,
+    private val webSearchService: WebSearchService,
     private val createConversationUseCase: CreateConversationUseCase,
     private val sendMessageUseCase: SendMessageUseCase,
     private val updateMessageUseCase: UpdateMessageUseCase,
@@ -60,6 +63,13 @@ class ChatViewModel @Inject constructor(
     val generationState: StateFlow<GenerationState> = _generationState.asStateFlow()
 
     private val _currentGeneratingMessageId = MutableStateFlow<String?>(null)
+    
+    // Web search state
+    private val _isSearchingWeb = MutableStateFlow(false)
+    val isSearchingWeb: StateFlow<Boolean> = _isSearchingWeb.asStateFlow()
+    
+    private val _webSearchResults = MutableStateFlow<String?>(null)
+    val webSearchResults: StateFlow<String?> = _webSearchResults.asStateFlow()
     
     private var generationJob: Job? = null
 
@@ -157,6 +167,27 @@ class ChatViewModel @Inject constructor(
             
             // Get completed messages for this conversation
             val completedMessages = _messages.value.filter { it.isComplete }
+            val lastUserMessage = completedMessages.lastOrNull { it.role == MessageRole.USER }?.content ?: ""
+
+            // Get current model info for prompt template
+            val model = modelManager.currentModel.value
+            val preferences = userPreferences.value
+            
+            // Perform web search if enabled
+            var webSearchContext = ""
+            if (preferences.webSearchEnabled && lastUserMessage.isNotBlank()) {
+                _isSearchingWeb.value = true
+                try {
+                    val searchResponse = webSearchService.search(lastUserMessage)
+                    if (searchResponse.success && searchResponse.results.isNotEmpty()) {
+                        webSearchContext = webSearchService.formatResultsForLLM(searchResponse)
+                        _webSearchResults.value = webSearchContext
+                    }
+                } catch (e: Exception) {
+                    // Web search failed, continue without it
+                }
+                _isSearchingWeb.value = false
+            }
 
             // Create placeholder assistant message
             val assistantMessage = ChatMessage(
@@ -169,15 +200,34 @@ class ChatViewModel @Inject constructor(
             
             _currentGeneratingMessageId.value = assistantMessage.id
             _messages.value = _messages.value + assistantMessage
-
-            // Get current model info for prompt template
-            val model = modelManager.currentModel.value
-            val preferences = userPreferences.value
+            
+            // Build system prompt with thinking mode if enabled
+            var systemPrompt = preferences.defaultSystemPrompt
+            if (preferences.thinkingModeEnabled) {
+                systemPrompt = ThinkingModeParser.createThinkingModePrompt(systemPrompt)
+            }
+            
+            // Add web search context to the prompt if available
+            val messagesForPrompt = if (webSearchContext.isNotBlank()) {
+                // Insert web search results before the last user message
+                val mutableMessages = completedMessages.toMutableList()
+                if (mutableMessages.isNotEmpty()) {
+                    val lastMessage = mutableMessages.last()
+                    if (lastMessage.role == MessageRole.USER) {
+                        mutableMessages[mutableMessages.lastIndex] = lastMessage.copy(
+                            content = webSearchContext + lastMessage.content
+                        )
+                    }
+                }
+                mutableMessages
+            } else {
+                completedMessages
+            }
             
             // Build prompt from conversation history
             val prompt = inferenceEngine.buildPrompt(
-                messages = completedMessages,
-                systemPrompt = preferences.defaultSystemPrompt,
+                messages = messagesForPrompt,
+                systemPrompt = systemPrompt,
                 promptTemplate = model?.promptTemplate ?: "chatml"
             )
 

@@ -227,6 +227,24 @@ class SettingsViewModel @Inject constructor(
     }
 
     /**
+     * Update thinking mode setting.
+     */
+    fun updateThinkingMode(enabled: Boolean) {
+        viewModelScope.launch {
+            preferencesDataStore.updateThinkingMode(enabled)
+        }
+    }
+
+    /**
+     * Update web search setting.
+     */
+    fun updateWebSearch(enabled: Boolean) {
+        viewModelScope.launch {
+            preferencesDataStore.updateWebSearch(enabled)
+        }
+    }
+
+    /**
      * Reset generation config to defaults.
      */
     fun resetGenerationConfig() {

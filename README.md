@@ -48,7 +48,14 @@ The app features a modern home screen with quick access to all capabilities:
 | **🎙️ Audio Scribe** | Record, transcribe, and summarize audio |
 | **📄 Document Chat** | Upload PDFs/docs and ask questions |
 | **💻 Code Companion** | Code explanation, debugging, and generation |
-| **📝 Templates** | Pre-made conversation starters |
+| **📝 Templates** | 60+ pre-made conversation starters |
+| **📚 Flashcards** | AI-generated interactive flashcards |
+| **📋 Quiz Mode** | AI-generated quizzes for testing |
+
+### 🧠 AI Features (NEW)
+- **Thinking Mode**: See chain-of-thought reasoning with `<think>` tag support
+- **Web Search**: LLM references DuckDuckGo search results for better answers
+- **Specialized Modes**: Debate partner, interview practice, wellness, recipes, travel, and more
 
 ### 🎯 AI Chat Features
 - **Smart Context Management** - KV cache automatically managed per conversation
@@ -98,6 +105,8 @@ The app features a modern home screen with quick access to all capabilities:
 - **Multi-threaded Inference** - Utilizes all available CPU cores
 - **Customizable Generation** - Adjustable temperature, top-p, top-k, and repeat penalty
 - **14 Prompt Templates** - Support for ChatML, Llama 2/3, Mistral, Phi, Gemma, and more
+- **Thinking Mode Parser** - Parse and display chain-of-thought reasoning
+- **Web Search Integration** - DuckDuckGo search with no API key required
 
 ---
 

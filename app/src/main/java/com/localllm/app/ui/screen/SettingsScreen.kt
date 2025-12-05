@@ -108,6 +108,27 @@ fun SettingsScreen(
             
             Divider(modifier = Modifier.padding(vertical = 8.dp))
             
+            // AI Features Section (NEW)
+            SettingsSection(title = "AI Features") {
+                SettingsSwitchItem(
+                    title = "Thinking Mode",
+                    subtitle = "Show AI reasoning with <think> tags",
+                    icon = Icons.Default.Psychology,
+                    checked = userPreferences.thinkingModeEnabled,
+                    onCheckedChange = { viewModel.updateThinkingMode(it) }
+                )
+                
+                SettingsSwitchItem(
+                    title = "Web Search",
+                    subtitle = "Search web before answering questions",
+                    icon = Icons.Default.Search,
+                    checked = userPreferences.webSearchEnabled,
+                    onCheckedChange = { viewModel.updateWebSearch(it) }
+                )
+            }
+            
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            
             // Generation Section
             SettingsSection(title = "Generation") {
                 // Presets
