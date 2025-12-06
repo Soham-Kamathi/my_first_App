@@ -80,6 +80,7 @@ class ModelManager @Inject constructor(
      * @param contextSize Context window size
      * @param useMmap Whether to use memory-mapped files
      * @param useNNAPI Whether to use NNAPI acceleration
+     * @param gpuLayers Number of layers to offload to GPU (0 = CPU only)
      * @return Result indicating success or failure
      */
     suspend fun loadModel(
@@ -87,7 +88,8 @@ class ModelManager @Inject constructor(
         threads: Int = Runtime.getRuntime().availableProcessors() - 1,
         contextSize: Int = 2048,
         useMmap: Boolean = true,
-        useNNAPI: Boolean = false
+        useNNAPI: Boolean = false,
+        gpuLayers: Int = 0
     ): Result<Unit> = mutex.withLock {
         return withContext(Dispatchers.IO) {
             try {
@@ -99,6 +101,7 @@ class ModelManager @Inject constructor(
                 
                 _loadingState.value = ModelLoadingState.Loading(0f)
                 Log.i(TAG, "Loading model: ${model.name} from ${model.localPath}")
+                Log.i(TAG, "GPU layers requested: $gpuLayers")
                 
                 // Unload existing model first
                 unloadModelInternal()
@@ -119,7 +122,7 @@ class ModelManager @Inject constructor(
                 val adjustedThreads = threads.coerceIn(1, Runtime.getRuntime().availableProcessors())
                 val adjustedContextSize = minOf(contextSize, model.contextLength).coerceAtLeast(512)
                 
-                Log.i(TAG, "Loading with threads=$adjustedThreads, contextSize=$adjustedContextSize, useMmap=$useMmap")
+                Log.i(TAG, "Loading with threads=$adjustedThreads, contextSize=$adjustedContextSize, useMmap=$useMmap, gpuLayers=$gpuLayers")
                 
                 _loadingState.value = ModelLoadingState.Loading(0.3f)
                 
@@ -128,7 +131,8 @@ class ModelManager @Inject constructor(
                     threads = adjustedThreads,
                     contextSize = adjustedContextSize,
                     useMmap = useMmap,
-                    useNNAPI = useNNAPI
+                    useNNAPI = useNNAPI,
+                    gpuLayers = gpuLayers
                 )
                 
                 Log.i(TAG, "loadModel returned contextPtr: $contextPtr")

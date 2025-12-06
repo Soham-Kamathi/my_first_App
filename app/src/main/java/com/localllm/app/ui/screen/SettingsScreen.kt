@@ -300,6 +300,94 @@ fun SettingsScreen(
             
             Divider(modifier = Modifier.padding(vertical = 8.dp))
             
+            // GPU/Hardware Acceleration Section
+            SettingsSection(title = "Hardware Acceleration") {
+                val hardwareProfile by viewModel.hardwareProfile.collectAsState()
+                
+                // Device capability info
+                hardwareProfile?.let { profile ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            Text(
+                                text = "Device: ${profile.deviceModel}",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                text = "Chipset: ${profile.chipset}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "RAM: ${String.format("%.1f", profile.totalRamGB)} GB",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "Capability: ${profile.capabilityLevel.name}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = when(profile.capabilityLevel) {
+                                    com.localllm.app.util.HardwareCapabilityDetector.CapabilityLevel.ULTRA -> MaterialTheme.colorScheme.primary
+                                    com.localllm.app.util.HardwareCapabilityDetector.CapabilityLevel.HIGH -> MaterialTheme.colorScheme.tertiary
+                                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                                }
+                            )
+                            if (profile.hasVulkanSupport) {
+                                Text(
+                                    text = "✓ Vulkan GPU Supported",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
+                }
+                
+                SettingsSwitchItem(
+                    title = "GPU Acceleration",
+                    subtitle = if (hardwareProfile?.hasVulkanSupport == true) 
+                        "Offload layers to GPU (Vulkan)" 
+                    else 
+                        "Not available on this device",
+                    icon = Icons.Default.Speed,
+                    checked = userPreferences.gpuAccelerationEnabled,
+                    onCheckedChange = { viewModel.updateGpuAcceleration(it) },
+                    enabled = hardwareProfile?.hasVulkanSupport == true
+                )
+                
+                if (userPreferences.gpuAccelerationEnabled && hardwareProfile?.hasVulkanSupport == true) {
+                    SettingsSliderItem(
+                        title = "GPU Layers",
+                        value = userPreferences.gpuLayers.toFloat(),
+                        valueRange = 0f..99f,
+                        steps = 98,
+                        valueFormat = { 
+                            val v = it.toInt()
+                            if (v == 0) "Auto (${hardwareProfile?.recommendedGpuLayers ?: 0})" 
+                            else v.toString() 
+                        },
+                        onValueChange = { viewModel.updateGpuLayers(it.toInt()) }
+                    )
+                    
+                    Text(
+                        text = "Higher = more GPU usage. Recommended: ${hardwareProfile?.recommendedGpuLayers ?: 0} layers",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                    )
+                }
+            }
+            
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            
             // Downloads Section
             SettingsSection(title = "Downloads") {
                 SettingsSwitchItem(
@@ -472,17 +560,19 @@ private fun SettingsSwitchItem(
     subtitle: String? = null,
     icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
+    onCheckedChange: (Boolean) -> Unit,
+    enabled: Boolean = true
 ) {
     SettingsItem(
         title = title,
         subtitle = subtitle,
         icon = icon,
-        onClick = { onCheckedChange(!checked) }
+        onClick = { if (enabled) onCheckedChange(!checked) }
     ) {
         Switch(
             checked = checked,
-            onCheckedChange = onCheckedChange
+            onCheckedChange = { if (enabled) onCheckedChange(it) },
+            enabled = enabled
         )
     }
 }

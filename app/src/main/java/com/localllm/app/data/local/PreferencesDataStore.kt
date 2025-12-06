@@ -44,6 +44,10 @@ class PreferencesDataStore @Inject constructor(
         val THINKING_MODE_ENABLED = booleanPreferencesKey("thinking_mode_enabled")
         val WEB_SEARCH_ENABLED = booleanPreferencesKey("web_search_enabled")
         
+        // GPU/Hardware acceleration
+        val GPU_ACCELERATION_ENABLED = booleanPreferencesKey("gpu_acceleration_enabled")
+        val GPU_LAYERS = intPreferencesKey("gpu_layers")
+        
         // Generation config
         val GEN_MAX_TOKENS = intPreferencesKey("gen_max_tokens")
         val GEN_TEMPERATURE = floatPreferencesKey("gen_temperature")
@@ -100,6 +104,8 @@ class PreferencesDataStore @Inject constructor(
             useNNAPI = preferences[PreferencesKeys.USE_NNAPI] ?: true,
             useMmap = preferences[PreferencesKeys.USE_MMAP] ?: true,
             contextCacheEnabled = preferences[PreferencesKeys.CONTEXT_CACHE_ENABLED] ?: true,
+            gpuAccelerationEnabled = preferences[PreferencesKeys.GPU_ACCELERATION_ENABLED] ?: false,
+            gpuLayers = preferences[PreferencesKeys.GPU_LAYERS] ?: 0,
             thinkingModeEnabled = preferences[PreferencesKeys.THINKING_MODE_ENABLED] ?: false,
             webSearchEnabled = preferences[PreferencesKeys.WEB_SEARCH_ENABLED] ?: false
         )
@@ -195,6 +201,18 @@ class PreferencesDataStore @Inject constructor(
     suspend fun updateWebSearch(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.WEB_SEARCH_ENABLED] = enabled
+        }
+    }
+
+    suspend fun updateGpuAcceleration(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.GPU_ACCELERATION_ENABLED] = enabled
+        }
+    }
+
+    suspend fun updateGpuLayers(layers: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.GPU_LAYERS] = layers
         }
     }
 }

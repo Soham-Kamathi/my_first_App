@@ -97,7 +97,7 @@ Java_com_localllm_app_inference_LlamaAndroid_freeBackendNative(JNIEnv *env, jobj
     }
 }
 
-// Load a model from file
+// Load a model from file with GPU acceleration support
 JNIEXPORT jlong JNICALL
 Java_com_localllm_app_inference_LlamaAndroid_loadModelNative(
         JNIEnv *env,
@@ -106,16 +106,25 @@ Java_com_localllm_app_inference_LlamaAndroid_loadModelNative(
         jint n_ctx,
         jint n_threads,
         jboolean use_mmap,
-        jboolean use_mlock) {
+        jboolean use_mlock,
+        jint n_gpu_layers) {
     
     std::string path = jstring_to_string(env, model_path);
     LOGI("Loading model from: %s", path.c_str());
+    LOGI("GPU layers requested: %d", n_gpu_layers);
     
     try {
         // Initialize model parameters
         llama_model_params model_params = llama_model_default_params();
         model_params.use_mmap = use_mmap;
         model_params.use_mlock = use_mlock;
+        
+        // GPU acceleration: set number of layers to offload to GPU
+        // This requires Vulkan backend to be compiled in
+        model_params.n_gpu_layers = n_gpu_layers;
+        
+        LOGI("Model params: mmap=%d, mlock=%d, gpu_layers=%d", 
+             model_params.use_mmap, model_params.use_mlock, model_params.n_gpu_layers);
         
         // Load the model
         llama_model *model = llama_model_load_from_file(path.c_str(), model_params);
@@ -124,7 +133,7 @@ Java_com_localllm_app_inference_LlamaAndroid_loadModelNative(
             return 0;
         }
         
-        LOGI("Model loaded successfully, ptr: %p", model);
+        LOGI("Model loaded successfully with %d GPU layers, ptr: %p", n_gpu_layers, model);
         return reinterpret_cast<jlong>(model);
     } catch (const std::exception& e) {
         LOGE("Exception loading model: %s", e.what());

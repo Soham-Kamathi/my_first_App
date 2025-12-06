@@ -84,16 +84,24 @@ class LlamaAndroid @Inject constructor() {
     /**
      * Load a GGUF model from the specified path.
      * Returns context pointer on success, 0 on failure.
+     * 
+     * @param modelPath Path to the GGUF model file
+     * @param threads Number of CPU threads to use
+     * @param contextSize Maximum context size in tokens
+     * @param useMmap Use memory-mapped file loading (recommended)
+     * @param useNNAPI Legacy parameter (unused, use gpuLayers instead)
+     * @param gpuLayers Number of model layers to offload to GPU (0 = CPU only)
      */
     fun loadModel(
         modelPath: String,
         threads: Int = 4,
         contextSize: Int = 2048,
         useMmap: Boolean = true,
-        useNNAPI: Boolean = false
+        useNNAPI: Boolean = false,
+        gpuLayers: Int = 0
     ): Long {
         if (stubMode) {
-            Log.d(TAG, "[STUB] loadModel called with path: $modelPath")
+            Log.d(TAG, "[STUB] loadModel called with path: $modelPath, gpuLayers: $gpuLayers")
             modelPtr = 12345L
             contextPtr = 67890L
             return contextPtr
@@ -101,10 +109,10 @@ class LlamaAndroid @Inject constructor() {
         
         return try {
             Log.i(TAG, "Loading model from: $modelPath")
-            Log.i(TAG, "Parameters: threads=$threads, contextSize=$contextSize, useMmap=$useMmap")
+            Log.i(TAG, "Parameters: threads=$threads, contextSize=$contextSize, useMmap=$useMmap, gpuLayers=$gpuLayers")
             
-            // Load model
-            modelPtr = loadModelNative(modelPath, contextSize, threads, useMmap, false)
+            // Load model with GPU layer configuration
+            modelPtr = loadModelNative(modelPath, contextSize, threads, useMmap, false, gpuLayers)
             Log.i(TAG, "loadModelNative returned: $modelPtr")
             
             if (modelPtr == 0L) {
@@ -140,7 +148,8 @@ class LlamaAndroid @Inject constructor() {
         nCtx: Int,
         nThreads: Int,
         useMmap: Boolean,
-        useMlock: Boolean
+        useMlock: Boolean,
+        nGpuLayers: Int
     ): Long
     
     private external fun createContextNative(
