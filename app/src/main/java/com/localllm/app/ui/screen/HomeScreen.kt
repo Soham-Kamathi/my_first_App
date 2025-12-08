@@ -33,6 +33,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.localllm.app.R
 import com.localllm.app.inference.ModelLoadingState
 import com.localllm.app.ui.viewmodel.HomeViewModel
+import org.bouncycastle.math.raw.Mod
 
 /**
  * Core feature card data class for primary features
@@ -54,6 +55,8 @@ data class SecondaryFeatureChip(
     val label: String,
     val icon: ImageVector
 )
+
+
 
 /**
  * Home Screen - High-Efficiency Dashboard for LocalLLM
@@ -111,31 +114,31 @@ fun HomeScreen(
                 drawableRes = R.drawable.code_completion,
                 gradient = listOf(Color(0xFF43E97B), Color(0xFF38F9D7))
             ),
-            FeatureCard(
-                id = "templates",
-                title = "Templates",
-                description = "50+ pre-built conversation starters",
-                icon = Icons.Outlined.Dashboard,
-                gradient = listOf(Color(0xFF14B8A6), Color(0xFF0D9488)),
-                route = "templates"
-            ),
-            FeatureCard(
-                id = "flashcards",
-                title = "Flashcards",
-                description = "AI-generated study flashcards",
-                icon = Icons.Outlined.Style,
-                gradient = listOf(Color(0xFFF97316), Color(0xFFEA580C)),
-                route = "flashcards"
-            ),
-            FeatureCard(
-                id = "quiz",
-                title = "Quiz Generator",
-                description = "Create and take AI-powered quizzes",
-                icon = Icons.Outlined.Quiz,
-                gradient = listOf(Color(0xFFEC4899), Color(0xFFDB2777)),
-                route = "quiz"
-            ),
-            FeatureCard(
+//            FeatureCard(
+//                id = "templates",
+//                title = "Templates",
+//                description = "50+ pre-built conversation starters",
+//                icon = Icons.Outlined.Dashboard,
+//                gradient = listOf(Color(0xFF14B8A6), Color(0xFF0D9488)),
+//                route = "templates"
+//            ),
+//            FeatureCard(
+//                id = "flashcards",
+//                title = "Flashcards",
+//                description = "AI-generated study flashcards",
+//                icon = Icons.Outlined.Style,
+//                gradient = listOf(Color(0xFFF97316), Color(0xFFEA580C)),
+//                route = "flashcards"
+//            ),
+//            FeatureCard(
+//                id = "quiz",
+//                title = "Quiz Generator",
+//                description = "Create and take AI-powered quizzes",
+//                icon = Icons.Outlined.Quiz,
+//                gradient = listOf(Color(0xFFEC4899), Color(0xFFDB2777)),
+//                route = "quiz"
+//            ),
+            CoreFeatureCard(
                 id = "ask_image",
                 title = "Ask Image",
                 description = "Visual AI analysis",
@@ -204,28 +207,33 @@ fun HomeScreen(
             
             // II. Core Features - Horizontal Scroll
             item {
-                Text(
-                    text = "Features",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
-            }
-            
-            item {
-                FeaturesGrid(
-                    features = features,
-                    onFeatureClick = { feature ->
-                        when (feature.id) {
-                            "chat" -> onNavigateToChat(null)
-                            "prompt_lab" -> onNavigateToPromptLab()
-                            "document_chat" -> onNavigateToDocumentChat()
-                            "code_companion" -> onNavigateToCodeCompanion()
-                            "templates" -> onNavigateToTemplates()
-                            "flashcards" -> onNavigateToFlashcards()
-                            "quiz" -> onNavigateToQuiz()
-                            "ask_image" -> onNavigateToAskImage()
-                            "audio_scribe" -> onNavigateToAudioScribe()
+                Column(modifier = Modifier.padding(top = 8.dp)) {
+                    Text(
+                        text = "Features",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        letterSpacing = 0.3.sp
+                    )
+
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        items(coreFeatures) { feature ->
+                            CoreFeatureCardItem(
+                                feature = feature,
+                                onClick = {
+                                    when (feature.id) {
+                                        "chat" -> onNavigateToChat(null)
+                                        "document_chat" -> onNavigateToDocumentChat()
+                                        "prompt_lab" -> onNavigateToPromptLab()
+                                        "code_companion" -> onNavigateToCodeCompanion()
+                                        "ask_image" -> onNavigateToAskImage()
+                                        "audio_scribe" -> onNavigateToAudioScribe()
+                                    }
+                                }
+                            )
                         }
                     }
                 }

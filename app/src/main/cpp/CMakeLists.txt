@@ -38,27 +38,35 @@ set(GGML_CCACHE OFF CACHE BOOL "" FORCE)
 # ==============================================================================
 # Enable Vulkan for GPU acceleration on supported devices
 # Vulkan is widely supported on Android 7.0+ (API 24+)
-option(LOCALLLM_ENABLE_VULKAN "Enable Vulkan GPU acceleration" ON)
+#option(LOCALLLM_ENABLE_VULKAN "Enable Vulkan GPU acceleration" ON)
+#
+#if(LOCALLLM_ENABLE_VULKAN)
+#    # Check if Vulkan is available
+#    find_package(Vulkan QUIET)
+#    if(Vulkan_FOUND OR ANDROID)
+#        message(STATUS "Vulkan support enabled for GPU acceleration")
+#        set(GGML_VULKAN ON CACHE BOOL "" FORCE)
+#        set(GGML_VULKAN_CHECK_RESULTS OFF CACHE BOOL "" FORCE)
+#        set(GGML_VULKAN_DEBUG OFF CACHE BOOL "" FORCE)
+#        set(GGML_VULKAN_MEMORY_DEBUG OFF CACHE BOOL "" FORCE)
+#        set(GGML_VULKAN_SHADER_DEBUG_INFO OFF CACHE BOOL "" FORCE)
+#        set(GGML_VULKAN_VALIDATE OFF CACHE BOOL "" FORCE)
+#        add_definitions(-DLOCALLLM_VULKAN_ENABLED)
+#    else()
+#        message(STATUS "Vulkan not found - GPU acceleration disabled")
+#        set(GGML_VULKAN OFF CACHE BOOL "" FORCE)
+#    endif()
+#else()
+#    set(GGML_VULKAN OFF CACHE BOOL "" FORCE)
+#endif()
 
-if(LOCALLLM_ENABLE_VULKAN)
-    # Check if Vulkan is available
-    find_package(Vulkan QUIET)
-    if(Vulkan_FOUND OR ANDROID)
-        message(STATUS "Vulkan support enabled for GPU acceleration")
-        set(GGML_VULKAN ON CACHE BOOL "" FORCE)
-        set(GGML_VULKAN_CHECK_RESULTS OFF CACHE BOOL "" FORCE)
-        set(GGML_VULKAN_DEBUG OFF CACHE BOOL "" FORCE)
-        set(GGML_VULKAN_MEMORY_DEBUG OFF CACHE BOOL "" FORCE)
-        set(GGML_VULKAN_SHADER_DEBUG_INFO OFF CACHE BOOL "" FORCE)
-        set(GGML_VULKAN_VALIDATE OFF CACHE BOOL "" FORCE)
-        add_definitions(-DLOCALLLM_VULKAN_ENABLED)
-    else()
-        message(STATUS "Vulkan not found - GPU acceleration disabled")
-        set(GGML_VULKAN OFF CACHE BOOL "" FORCE)
-    endif()
-else()
-    set(GGML_VULKAN OFF CACHE BOOL "" FORCE)
-endif()
+# Force disable Vulkan for Android builds (shader generator cannot run on NDK)
+message(STATUS "Vulkan GPU disabled — Android cannot build host tools")
+set(GGML_VULKAN OFF CACHE BOOL "" FORCE)
+set(GGML_VULKAN_GEN_SHADERS OFF CACHE BOOL "" FORCE)
+set(LOCALLLM_ENABLE_VULKAN OFF CACHE BOOL "" FORCE)
+
+
 
 # Disable other GPU backends not available on Android
 set(GGML_CUDA OFF CACHE BOOL "" FORCE)
@@ -106,14 +114,14 @@ target_link_libraries(localllm
 )
 
 # Link Vulkan if enabled
-if(LOCALLLM_ENABLE_VULKAN AND (Vulkan_FOUND OR ANDROID))
-    if(ANDROID)
-        # On Android, Vulkan is part of the system
-        target_link_libraries(localllm vulkan)
-    else()
-        target_link_libraries(localllm Vulkan::Vulkan)
-    endif()
-endif()
+#if(LOCALLLM_ENABLE_VULKAN AND (Vulkan_FOUND OR ANDROID))
+#    if(ANDROID)
+#        # On Android, Vulkan is part of the system
+#        target_link_libraries(localllm vulkan)
+#    else()
+#        target_link_libraries(localllm Vulkan::Vulkan)
+#    endif()
+#endif()
 
 # Compiler definitions
 target_compile_definitions(localllm PRIVATE
