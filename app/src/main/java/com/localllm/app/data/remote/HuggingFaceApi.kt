@@ -26,7 +26,8 @@ interface HuggingFaceApi {
      */
     @GET("models/{modelId}")
     suspend fun getModelDetails(
-        @Path("modelId", encoded = true) modelId: String
+        @Path("modelId", encoded = true) modelId: String,
+        @Query("siblings") siblings: Int = 1
     ): HuggingFaceModelDetails
     
     /**
@@ -79,7 +80,28 @@ data class HuggingFaceModelDetails(
     val library_name: String? = null,
     val siblings: List<HuggingFaceSibling>? = null,
     val cardData: HuggingFaceCardData? = null,
-    val createdAt: String? = null
+    val createdAt: String? = null,
+    val widgetData: List<Map<String, String>>? = null,
+    val config: HuggingFaceConfig? = null,
+    val transformersInfo: HuggingFaceTransformersInfo? = null
+)
+
+/**
+ * Model configuration data.
+ */
+data class HuggingFaceConfig(
+    val architectures: List<String>? = null,
+    val model_type: String? = null,
+    val quantization_config: Map<String, Any>? = null,
+    val tokenizer_config: Map<String, Any>? = null
+)
+
+/**
+ * Transformers library info.
+ */
+data class HuggingFaceTransformersInfo(
+    val auto_model: String? = null,
+    val pipeline_tag: String? = null
 )
 
 /**

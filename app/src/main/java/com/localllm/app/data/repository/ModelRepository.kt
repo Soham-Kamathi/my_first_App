@@ -198,14 +198,20 @@ class ModelRepository @Inject constructor(
                             downloadUrl = downloadUrl,
                             minRamMb = estimateMinRam(fileSize),
                             recommendedRamMb = estimateRecommendedRam(fileSize),
-                            description = "From ${details.author ?: repoId.split("/")[0]} on Hugging Face. ${details.downloads} downloads.",
+                            description = buildDescription(details, repoId),
                             license = details.cardData?.license ?: "unknown",
                             tags = buildTags(repoId, file.filename, details.tags),
                             promptTemplate = detectPromptTemplate(repoId),
                             contextLength = detectContextLength(repoId),
                             isDownloaded = false,
                             localPath = null,
-                            downloadedDate = null
+                            downloadedDate = null,
+                            author = details.author,
+                            modelFamily = extractModelFamily(repoId),
+                            downloads = details.downloads,
+                            likes = details.likes,
+                            pipelineTag = details.pipeline_tag,
+                            lastModified = details.lastModified
                         )
                         
                         // Check if already downloaded
@@ -526,5 +532,57 @@ class ModelRepository @Inject constructor(
             modelsDir.mkdirs()
         }
         return modelsDir
+    }
+    
+    /**
+     * Build a description from HuggingFace model details.
+     */
+    private fun buildDescription(details: com.localllm.app.data.remote.HuggingFaceModelDetails, repoId: String): String {
+        val parts = mutableListOf<String>()
+        
+        // Add pipeline tag description
+        details.pipeline_tag?.let { tag ->
+            when (tag) {
+                "text-generation" -> parts.add("Advanced text generation model")
+                "conversational" -> parts.add("Optimized for chat and conversations")
+                else -> parts.add("Language model")
+            }
+        }
+        
+        // Add model characteristics from tags
+        details.tags?.let { tags ->
+            when {
+                tags.any { it.contains("code", ignoreCase = true) } -> parts.add("specialized for code")
+                tags.any { it.contains("instruct", ignoreCase = true) } -> parts.add("instruction-following")
+                tags.any { it.contains("chat", ignoreCase = true) } -> parts.add("conversational AI")
+                else -> {}
+            }
+        }
+        
+        // Add author info
+        val author = details.author ?: repoId.split("/")[0]
+        parts.add("by $author")
+        
+        return parts.joinToString(", ").replaceFirstChar { it.uppercase() }
+    }
+    
+    /**
+     * Extract model family from repo ID.
+     */
+    private fun extractModelFamily(repoId: String): String {
+        val name = repoId.lowercase()
+        return when {
+            name.contains("llama") -> "Llama"
+            name.contains("mistral") -> "Mistral"
+            name.contains("deepseek") -> "DeepSeek"
+            name.contains("qwen") -> "Qwen"
+            name.contains("gemma") -> "Gemma"
+            name.contains("phi") -> "Phi"
+            name.contains("tinyllama") -> "TinyLlama"
+            name.contains("smollm") -> "SmolLM"
+            name.contains("starcoder") -> "StarCoder"
+            name.contains("aya") -> "Aya"
+            else -> "Other"
+        }
     }
 }

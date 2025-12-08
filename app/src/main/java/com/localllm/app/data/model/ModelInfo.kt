@@ -28,7 +28,13 @@ data class ModelInfo(
     val isDownloaded: Boolean = false,
     val localPath: String? = null,
     val downloadedDate: Long? = null,
-    val sha256Checksum: String? = null
+    val sha256Checksum: String? = null,
+    val author: String? = null,
+    val modelFamily: String? = null,
+    val downloads: Int = 0,
+    val likes: Int = 0,
+    val pipelineTag: String? = null,
+    val lastModified: String? = null
 ) {
     /**
      * Returns the file size formatted as a human-readable string.

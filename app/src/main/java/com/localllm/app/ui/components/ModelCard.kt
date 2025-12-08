@@ -1,8 +1,10 @@
 package com.localllm.app.ui.components
 
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -12,11 +14,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.localllm.app.data.model.DownloadState
 import com.localllm.app.data.model.ModelInfo
+import com.localllm.app.util.ModelIconMapper
 
 /**
  * Card component for displaying model information with download/load actions.
@@ -65,55 +70,108 @@ fun ModelCard(
             Column(
                 modifier = Modifier.padding(20.dp)
             ) {
-                // Header row
+                // Header row with model icon
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.Top
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = model.name,
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.SemiBold
+                    // Model icon and info
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        // Model icon with gradient background
+                        Box(
+                            modifier = Modifier
+                                .size(56.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    Brush.radialGradient(
+                                        colors = listOf(
+                                            Color(0xFF00E5FF).copy(alpha = 0.2f),
+                                            Color(0xFF00E5FF).copy(alpha = 0.05f)
+                                        )
+                                    )
                                 ),
-                                color = Color.White
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter = painterResource(
+                                    id = ModelIconMapper.getIconForModelByAuthor(
+                                        model.author,
+                                        model.name
+                                    )
+                                ),
+                                contentDescription = "${model.name} icon",
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape),
+                                contentScale = ContentScale.Fit
                             )
-                            if (isLoaded) {
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Surface(
-                                    shape = MaterialTheme.shapes.small,
-                                    color = Color(0xFF00E5FF).copy(alpha = 0.2f)
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                        verticalAlignment = Alignment.CenterVertically
+                        }
+                        
+                        Spacer(modifier = Modifier.width(14.dp))
+                        
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = model.name,
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.SemiBold
+                                    ),
+                                    color = Color.White,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                if (isLoaded) {
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Surface(
+                                        shape = MaterialTheme.shapes.small,
+                                        color = Color(0xFF00E5FF).copy(alpha = 0.2f)
                                     ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(6.dp)
-                                                .clip(androidx.compose.foundation.shape.CircleShape)
-                                                .background(Color(0xFF00E5FF))
-                                        )
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text(
-                                            text = "LOADED",
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                fontWeight = FontWeight.SemiBold
-                                            ),
-                                            color = Color(0xFF00E5FF)
-                                        )
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(6.dp)
+                                                    .clip(androidx.compose.foundation.shape.CircleShape)
+                                                    .background(Color(0xFF00E5FF))
+                                            )
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            Text(
+                                                text = "LOADED",
+                                                style = MaterialTheme.typography.labelSmall.copy(
+                                                    fontWeight = FontWeight.SemiBold
+                                                ),
+                                                color = Color(0xFF00E5FF)
+                                            )
+                                        }
                                     }
                                 }
                             }
+                            
+                            Spacer(modifier = Modifier.height(4.dp))
+                            
+                            // Author and model family
+                            model.author?.let { author ->
+                                Text(
+                                    text = "by $author",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color(0xFF9E9E9E)
+                                )
+                            }
+                            
+                            Spacer(modifier = Modifier.height(6.dp))
+                            
+                            Text(
+                                text = "${model.parameterCount} • ${model.quantization}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color(0xFFB0B0B0)
+                            )
                         }
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = "${model.parameterCount} • ${model.quantization}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color(0xFFB0B0B0)
-                        )
                     }
                     
                     // Compatibility indicator
@@ -157,6 +215,48 @@ fun ModelCard(
                 )
                 
                 Spacer(modifier = Modifier.height(12.dp))
+                
+                // Popularity metrics (downloads and likes)
+                if (model.downloads > 0 || model.likes > 0) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        if (model.downloads > 0) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Default.Download,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp),
+                                    tint = Color(0xFF9E9E9E)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = formatNumber(model.downloads),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color(0xFF9E9E9E)
+                                )
+                            }
+                        }
+                        if (model.likes > 0) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Default.Favorite,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp),
+                                    tint = Color(0xFFFF1744)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = formatNumber(model.likes),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color(0xFF9E9E9E)
+                                )
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
                 
                 // Enhanced stats row with gradient chips
                 Row(
@@ -440,5 +540,16 @@ private fun ModelStat(
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+    }
+}
+
+/**
+ * Format large numbers with K/M suffixes.
+ */
+private fun formatNumber(num: Int): String {
+    return when {
+        num >= 1_000_000 -> String.format("%.1fM", num / 1_000_000.0)
+        num >= 1_000 -> String.format("%.1fK", num / 1_000.0)
+        else -> num.toString()
     }
 }

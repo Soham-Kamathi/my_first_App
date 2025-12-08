@@ -27,6 +27,7 @@ object DatabaseModule {
             LocalLLMDatabase::class.java,
             "local_llm_database"
         )
+            .addMigrations(LocalLLMDatabase.MIGRATION_1_2)
             .fallbackToDestructiveMigration()
             .build()
     }
