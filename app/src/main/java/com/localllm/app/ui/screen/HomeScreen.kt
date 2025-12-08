@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.localllm.app.R
 import com.localllm.app.inference.ModelLoadingState
+import com.localllm.app.ui.components.FeatureCard
 import com.localllm.app.ui.viewmodel.HomeViewModel
 import org.bouncycastle.math.raw.Mod
 
@@ -42,9 +43,10 @@ data class CoreFeatureCard(
     val id: String,
     val title: String,
     val description: String,
-    val icon: ImageVector? = null,
-    val drawableRes: Int? = null,
-    val gradient: List<Color>
+    val icon: ImageVector,
+    val gradient: List<Color>,
+    val stats: String? = null,
+    val badge: String? = null
 )
 
 /**
@@ -90,67 +92,53 @@ fun HomeScreen(
                 id = "chat",
                 title = "AI Chat",
                 description = "Start intelligent conversations",
-                drawableRes = R.drawable.ai_chat,
-                gradient = listOf(Color(0xFF667EEA), Color(0xFF764BA2))
+                icon = Icons.Outlined.Chat,
+                gradient = listOf(Color(0xFF667EEA), Color(0xFF764BA2)),
+                badge = "Popular",
+                stats = "24/7"
             ),
             CoreFeatureCard(
                 id = "document_chat",
                 title = "Document Chat",
                 description = "Chat with your PDFs & docs",
-                drawableRes = R.drawable.document_chat,
-                gradient = listOf(Color(0xFFF093FB), Color(0xFFF5576C))
+                icon = Icons.Outlined.Description,
+                gradient = listOf(Color(0xFFF093FB), Color(0xFFF5576C)),
+                badge = "New",
+                stats = "PDF"
             ),
             CoreFeatureCard(
                 id = "prompt_lab",
                 title = "Prompt Lab",
                 description = "Experiment & fine-tune",
-                drawableRes = R.drawable.prompt_lab,
-                gradient = listOf(Color(0xFF4FACFE), Color(0xFF00F2FE))
+                icon = Icons.Outlined.Science,
+                gradient = listOf(Color(0xFF4FACFE), Color(0xFF00F2FE)),
+                badge = "Pro",
+                stats = "Test"
             ),
             CoreFeatureCard(
                 id = "code_companion",
                 title = "Code Companion",
                 description = "Debug & optimize code",
-                drawableRes = R.drawable.code_completion,
-                gradient = listOf(Color(0xFF43E97B), Color(0xFF38F9D7))
+                icon = Icons.Outlined.Code,
+                gradient = listOf(Color(0xFF43E97B), Color(0xFF38F9D7)),
+                badge = "Beta",
+                stats = "Dev"
             ),
-//            FeatureCard(
-//                id = "templates",
-//                title = "Templates",
-//                description = "50+ pre-built conversation starters",
-//                icon = Icons.Outlined.Dashboard,
-//                gradient = listOf(Color(0xFF14B8A6), Color(0xFF0D9488)),
-//                route = "templates"
-//            ),
-//            FeatureCard(
-//                id = "flashcards",
-//                title = "Flashcards",
-//                description = "AI-generated study flashcards",
-//                icon = Icons.Outlined.Style,
-//                gradient = listOf(Color(0xFFF97316), Color(0xFFEA580C)),
-//                route = "flashcards"
-//            ),
-//            FeatureCard(
-//                id = "quiz",
-//                title = "Quiz Generator",
-//                description = "Create and take AI-powered quizzes",
-//                icon = Icons.Outlined.Quiz,
-//                gradient = listOf(Color(0xFFEC4899), Color(0xFFDB2777)),
-//                route = "quiz"
-//            ),
             CoreFeatureCard(
                 id = "ask_image",
                 title = "Ask Image",
                 description = "Visual AI analysis",
                 icon = Icons.Outlined.Image,
-                gradient = listOf(Color(0xFFFA709A), Color(0xFFFEE140))
+                gradient = listOf(Color(0xFFFA709A), Color(0xFFFEE140)),
+                stats = "Vision"
             ),
             CoreFeatureCard(
                 id = "audio_scribe",
                 title = "Audio Scribe",
                 description = "Speech to text locally",
                 icon = Icons.Outlined.Mic,
-                gradient = listOf(Color(0xFF30CFD0), Color(0xFF330867))
+                gradient = listOf(Color(0xFF30CFD0), Color(0xFF330867)),
+                stats = "STT"
             )
         )
     }
@@ -221,9 +209,24 @@ fun HomeScreen(
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         items(coreFeatures) { feature ->
-                            CoreFeatureCardItem(
-                                feature = feature,
-                                onClick = {
+                            FeatureCard(
+                                title = feature.title,
+                                subtitle = feature.description,
+                                icon = feature.icon,
+                                gradient = feature.gradient,
+                                stats = feature.stats,
+                                badge = feature.badge,
+                                onCardClick = {
+                                    when (feature.id) {
+                                        "chat" -> onNavigateToChat(null)
+                                        "document_chat" -> onNavigateToDocumentChat()
+                                        "prompt_lab" -> onNavigateToPromptLab()
+                                        "code_companion" -> onNavigateToCodeCompanion()
+                                        "ask_image" -> onNavigateToAskImage()
+                                        "audio_scribe" -> onNavigateToAudioScribe()
+                                    }
+                                },
+                                onActionClick = {
                                     when (feature.id) {
                                         "chat" -> onNavigateToChat(null)
                                         "document_chat" -> onNavigateToDocumentChat()
@@ -765,91 +768,7 @@ private fun ModelErrorBanner(
 }
 
 // ============================================================================
-// III. FEATURE HUB (HORIZONTAL SCROLLING GRADIENT CARDS)
-// ============================================================================
-
-@Composable
-private fun CoreFeatureCardItem(
-    feature: CoreFeatureCard,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .width(280.dp)
-            .height(160.dp)
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.Transparent
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.linearGradient(
-                        colors = feature.gradient
-                    )
-                )
-                .padding(24.dp)
-        ) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
-                // Icon - Use PNG if available, otherwise vector icon
-                Box(
-                    modifier = Modifier
-                        .size(64.dp)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.25f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    when {
-                        feature.drawableRes != null -> {
-                            Icon(
-                                painter = painterResource(id = feature.drawableRes),
-                                contentDescription = null,
-                                modifier = Modifier.size(250.dp),
-                                tint = Color.White
-                            )
-                        }
-                        feature.icon != null -> {
-                            Icon(
-                                imageVector = feature.icon,
-                                contentDescription = null,
-                                modifier = Modifier.size(36.dp),
-                                tint = Color.White
-                            )
-                        }
-                    }
-                }
-                
-                // Text
-                Column {
-                    Text(
-                        text = feature.title,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        letterSpacing = 0.3.sp
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = feature.description,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White.copy(alpha = 0.95f),
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        lineHeight = 20.sp
-                    )
-                }
-            }
-        }
-    }
-}// ============================================================================
-// IV. QUICK ACTIONS (HORIZONTAL CHIPS)
+// III. QUICK ACTIONS (HORIZONTAL CHIPS)
 // ============================================================================
 
 @Composable
