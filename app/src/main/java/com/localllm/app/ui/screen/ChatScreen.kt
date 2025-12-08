@@ -16,9 +16,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -105,13 +107,15 @@ fun ChatScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Model loading indicator
+            // Model loading indicator with enhanced colors
             if (modelLoadingState is ModelLoadingState.Loading) {
                 LinearProgressIndicator(
                     progress = (modelLoadingState as ModelLoadingState.Loading).progress,
-                    modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(3.dp),
+                    color = Color(0xFF00E5FF),
+                    trackColor = Color(0xFF1E1E1E)
                 )
             }
             
@@ -205,15 +209,18 @@ private fun ChatTopBar(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = modelName ?: "LocalLLM",
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.SemiBold
+                    ),
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    color = Color.White
                 )
                 if (modelLoadingState is ModelLoadingState.Loading) {
                     Text(
                         text = "Loading...",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary
+                        color = Color(0xFF00E5FF)
                     )
                 } else if (isModelLoaded) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -221,13 +228,13 @@ private fun ChatTopBar(
                             modifier = Modifier
                                 .size(6.dp)
                                 .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primary)
+                                .background(Color(0xFF00E5FF))
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "Ready",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = Color(0xFFB0B0B0)
                         )
                     }
                 }
@@ -276,35 +283,65 @@ private fun ChatTopBar(
 private fun NoModelBanner(
     onSelectModel: () -> Unit
 ) {
+    // Enhanced gradient banner
+    val bannerGradient = Brush.linearGradient(
+        colors = listOf(
+            Color(0xFFFF1744).copy(alpha = 0.15f),
+            Color(0xFFE91E63).copy(alpha = 0.1f)
+        )
+    )
+    
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
-        shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.errorContainer
+            .padding(20.dp),
+        shape = RoundedCornerShape(16.dp),
+        color = Color.Transparent
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                Icons.Default.Warning,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.error
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "No model loaded",
-                    style = MaterialTheme.typography.titleSmall
-                )
-                Text(
-                    text = "Select a model to start chatting",
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-            TextButton(onClick = onSelectModel) {
-                Text("Select")
+        Box(modifier = Modifier.background(bannerGradient)) {
+            Row(
+                modifier = Modifier.padding(20.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFFF1744).copy(alpha = 0.2f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.Warning,
+                        contentDescription = null,
+                        tint = Color(0xFFFF1744),
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "No model loaded",
+                        style = MaterialTheme.typography.titleSmall.copy(
+                            fontWeight = FontWeight.SemiBold
+                        ),
+                        color = Color.White
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Select a model to start chatting",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFFB0B0B0)
+                    )
+                }
+                Button(
+                    onClick = onSelectModel,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFFF1744),
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text("Select", fontWeight = FontWeight.SemiBold)
+                }
             }
         }
     }
@@ -323,19 +360,37 @@ private fun EmptyConversationPlaceholder(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(32.dp)
         ) {
-            Icon(
-                Icons.Outlined.ChatBubbleOutline,
-                contentDescription = null,
-                modifier = Modifier.size(64.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-            )
-            Spacer(modifier = Modifier.height(16.dp))
+            // Enhanced icon with gradient background
+            Box(
+                modifier = Modifier
+                    .size(96.dp)
+                    .clip(CircleShape)
+                    .background(
+                        Brush.radialGradient(
+                            colors = listOf(
+                                Color(0xFF00E5FF).copy(alpha = 0.2f),
+                                Color.Transparent
+                            )
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Outlined.ChatBubbleOutline,
+                    contentDescription = null,
+                    modifier = Modifier.size(48.dp),
+                    tint = Color(0xFF00E5FF)
+                )
+            }
+            Spacer(modifier = Modifier.height(24.dp))
             Text(
                 text = "Start a Conversation",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = FontWeight.SemiBold
+                ),
+                color = Color.White
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = if (modelName != null) {
                     "Chat with $modelName"
@@ -343,7 +398,7 @@ private fun EmptyConversationPlaceholder(
                     "Load a model to begin"
                 },
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                color = Color(0xFFB0B0B0)
             )
         }
     }
@@ -357,23 +412,25 @@ private fun GenerationStats(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            .padding(horizontal = 12.dp, vertical = 6.dp),
         horizontalArrangement = Arrangement.End
     ) {
         Surface(
-            shape = RoundedCornerShape(16.dp),
-            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            shape = RoundedCornerShape(20.dp),
+            color = Color(0xFF1E1E1E)
         ) {
             Row(
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 TypingIndicator()
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(12.dp))
                 Text(
                     text = "$tokensGenerated tokens • ${String.format("%.1f", tokensPerSecond)} t/s",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontWeight = FontWeight.Medium
+                    ),
+                    color = Color(0xFF00E5FF)
                 )
             }
         }

@@ -6,6 +6,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,29 +23,41 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.localllm.app.R
 import com.localllm.app.inference.ModelLoadingState
 import com.localllm.app.ui.viewmodel.HomeViewModel
 
 /**
- * Feature card data class
+ * Core feature card data class for primary features
  */
-data class FeatureCard(
+data class CoreFeatureCard(
     val id: String,
     val title: String,
     val description: String,
-    val icon: ImageVector,
-    val gradient: List<Color>,
-    val route: String
+    val icon: ImageVector? = null,
+    val drawableRes: Int? = null,
+    val gradient: List<Color>
 )
 
 /**
- * Home Screen inspired by Google Edge Gallery
- * Provides access to all AI features: Chat, Prompt Lab, Ask Image, Audio Scribe
+ * Secondary feature chip data class
+ */
+data class SecondaryFeatureChip(
+    val id: String,
+    val label: String,
+    val icon: ImageVector
+)
+
+/**
+ * Home Screen - High-Efficiency Dashboard for LocalLLM
+ * Design prioritizes on-device status, fast feature access, and Material 3 Dark Mode aesthetic
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,74 +77,85 @@ fun HomeScreen(
     val currentModel by viewModel.currentModel.collectAsState()
     val modelLoadingState by viewModel.modelLoadingState.collectAsState()
     val recentConversations by viewModel.recentConversations.collectAsState()
-    
-    val features = remember {
+
+    // Core Features (horizontal scrolling cards with gradients)
+    val coreFeatures = remember {
         listOf(
-            FeatureCard(
+            CoreFeatureCard(
                 id = "chat",
                 title = "AI Chat",
-                description = "Multi-turn conversations with AI assistant",
-                icon = Icons.Outlined.Chat,
-                gradient = listOf(Color(0xFF6366F1), Color(0xFF8B5CF6)),
-                route = "chat"
+                description = "Start intelligent conversations",
+                drawableRes = R.drawable.ai_chat,
+                gradient = listOf(Color(0xFF667EEA), Color(0xFF764BA2))
             ),
-            FeatureCard(
-                id = "prompt_lab",
-                title = "Prompt Lab",
-                description = "Experiment with prompts, templates & parameters",
-                icon = Icons.Outlined.Science,
-                gradient = listOf(Color(0xFF10B981), Color(0xFF059669)),
-                route = "prompt_lab"
-            ),
-            FeatureCard(
+            CoreFeatureCard(
                 id = "document_chat",
                 title = "Document Chat",
-                description = "Chat with PDFs, text files, and documents",
-                icon = Icons.Outlined.Description,
-                gradient = listOf(Color(0xFF3B82F6), Color(0xFF1D4ED8)),
-                route = "document_chat"
+                description = "Chat with your PDFs & docs",
+                drawableRes = R.drawable.document_chat,
+                gradient = listOf(Color(0xFFF093FB), Color(0xFFF5576C))
             ),
-            FeatureCard(
+            CoreFeatureCard(
+                id = "prompt_lab",
+                title = "Prompt Lab",
+                description = "Experiment & fine-tune",
+                drawableRes = R.drawable.prompt_lab,
+                gradient = listOf(Color(0xFF4FACFE), Color(0xFF00F2FE))
+            ),
+            CoreFeatureCard(
                 id = "code_companion",
                 title = "Code Companion",
-                description = "Explain, debug, optimize, and convert code",
-                icon = Icons.Outlined.Code,
-                gradient = listOf(Color(0xFF8B5CF6), Color(0xFF6D28D9)),
-                route = "code_companion"
+                description = "Debug & optimize code",
+                drawableRes = R.drawable.code_completion,
+                gradient = listOf(Color(0xFF43E97B), Color(0xFF38F9D7))
             ),
-            FeatureCard(
-                id = "templates",
-                title = "Templates",
-                description = "Pre-built conversation starters",
-                icon = Icons.Outlined.Dashboard,
-                gradient = listOf(Color(0xFF14B8A6), Color(0xFF0D9488)),
-                route = "templates"
-            ),
-            FeatureCard(
+            CoreFeatureCard(
                 id = "ask_image",
                 title = "Ask Image",
-                description = "Upload images and ask AI questions about them",
+                description = "Visual AI analysis",
                 icon = Icons.Outlined.Image,
-                gradient = listOf(Color(0xFFF59E0B), Color(0xFFD97706)),
-                route = "ask_image"
+                gradient = listOf(Color(0xFFFA709A), Color(0xFFFEE140))
             ),
-            FeatureCard(
+            CoreFeatureCard(
                 id = "audio_scribe",
                 title = "Audio Scribe",
-                description = "Transcribe speech to text locally",
+                description = "Speech to text locally",
                 icon = Icons.Outlined.Mic,
-                gradient = listOf(Color(0xFFEF4444), Color(0xFFDC2626)),
-                route = "audio_scribe"
+                gradient = listOf(Color(0xFF30CFD0), Color(0xFF330867))
             )
         )
     }
-    
+
+    // Secondary Features (horizontal chips)
+    val quickActions = remember {
+        listOf(
+            SecondaryFeatureChip(
+                id = "models",
+                label = "Models",
+                icon = Icons.Filled.CloudDownload
+            ),
+            SecondaryFeatureChip(
+                id = "templates",
+                label = "Templates",
+                icon = Icons.Outlined.Dashboard
+            ),
+            SecondaryFeatureChip(
+                id = "settings",
+                label = "Settings",
+                icon = Icons.Default.Settings
+            ),
+            SecondaryFeatureChip(
+                id = "history",
+                label = "Full History",
+                icon = Icons.Filled.History
+            )
+        )
+    }
+
     Scaffold(
         topBar = {
-            HomeTopBar(
-                modelName = currentModel?.name,
-                modelLoadingState = modelLoadingState,
-                onModelsClick = onNavigateToModels,
+            DashboardTopBar(
+                onSearchClick = { /* TODO: Implement global search */ },
                 onSettingsClick = onNavigateToSettings
             )
         }
@@ -138,430 +164,804 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            // Hero Section
+            // I. Model Status Banner
             item {
-                HeroSection(
+                ModelStatusBanner(
                     modelName = currentModel?.name,
                     modelLoadingState = modelLoadingState,
-                    onLoadModel = onNavigateToModels
+                    onLoadModel = onNavigateToModels,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
                 )
             }
             
-            // Features Grid
+            // II. Core Features - Horizontal Scroll
             item {
-                Text(
-                    text = "Features",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
-            }
-            
-            item {
-                FeaturesGrid(
-                    features = features,
-                    onFeatureClick = { feature ->
-                        when (feature.id) {
-                            "chat" -> onNavigateToChat(null)
-                            "prompt_lab" -> onNavigateToPromptLab()
-                            "document_chat" -> onNavigateToDocumentChat()
-                            "code_companion" -> onNavigateToCodeCompanion()
-                            "templates" -> onNavigateToTemplates()
-                            "ask_image" -> onNavigateToAskImage()
-                            "audio_scribe" -> onNavigateToAudioScribe()
+                Column(modifier = Modifier.padding(top = 8.dp)) {
+                    Text(
+                        text = "Features",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        letterSpacing = 0.3.sp
+                    )
+                    
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        items(coreFeatures) { feature ->
+                            CoreFeatureCardItem(
+                                feature = feature,
+                                onClick = {
+                                    when (feature.id) {
+                                        "chat" -> onNavigateToChat(null)
+                                        "document_chat" -> onNavigateToDocumentChat()
+                                        "prompt_lab" -> onNavigateToPromptLab()
+                                        "code_companion" -> onNavigateToCodeCompanion()
+                                        "ask_image" -> onNavigateToAskImage()
+                                        "audio_scribe" -> onNavigateToAudioScribe()
+                                    }
+                                }
+                            )
                         }
                     }
-                )
+                }
             }
             
-            // Quick Actions
+            // III. Quick Actions - Horizontal Chips
             item {
-                QuickActionsSection(
-                    onNewChat = { onNavigateToChat(null) },
-                    onHistory = onNavigateToHistory,
-                    onModels = onNavigateToModels
-                )
-            }
-            
-            // Recent Conversations
-            if (recentConversations.isNotEmpty()) {
-                item {
+                Column {
                     Text(
-                        text = "Recent Conversations",
+                        text = "Quick Actions",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(vertical = 8.dp)
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        letterSpacing = 0.3.sp
                     )
-                }
-                
-                item {
-                    RecentConversationsRow(
-                        conversations = recentConversations,
-                        onConversationClick = { conversationId -> 
-                            onNavigateToChat(conversationId) 
+                    
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        items(quickActions) { action ->
+                            QuickActionChip(
+                                action = action,
+                                onClick = {
+                                    when (action.id) {
+                                        "models" -> onNavigateToModels()
+                                        "templates" -> onNavigateToTemplates()
+                                        "settings" -> onNavigateToSettings()
+                                        "history" -> onNavigateToHistory()
+                                    }
+                                }
+                            )
                         }
-                    )
+                    }
                 }
             }
             
-            // Tips Section
+            // IV. Recent Conversations Preview
+            if (recentConversations.isNotEmpty()) {
+                item {
+                    Column {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Recent Chats",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                letterSpacing = 0.3.sp
+                            )
+                            
+                            TextButton(onClick = onNavigateToHistory) {
+                                Text(
+                                    "View All",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Icon(
+                                    Icons.Default.ArrowForward,
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .size(16.dp)
+                                        .padding(start = 4.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                        
+                        LazyRow(
+                            contentPadding = PaddingValues(horizontal = 16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(recentConversations.take(5)) { conversation ->
+                                RecentConversationPreviewCard(
+                                    conversation = conversation,
+                                    onClick = { onNavigateToChat(conversation.id) }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Bottom spacing
             item {
-                TipsSection()
+                Spacer(modifier = Modifier.height(80.dp))
             }
         }
     }
 }
 
+// ============================================================================
+// I. HEADER & BRANDING
+// ============================================================================
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HomeTopBar(
-    modelName: String?,
-    modelLoadingState: ModelLoadingState,
-    onModelsClick: () -> Unit,
+private fun DashboardTopBar(
+    onSearchClick: () -> Unit,
     onSettingsClick: () -> Unit
 ) {
     TopAppBar(
         title = {
-            Column {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Small icon before LocalLLM
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "LocalLLM",
                     style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.5.sp
                 )
-                Text(
-                    text = when (modelLoadingState) {
-                        is ModelLoadingState.Loading -> "Loading model..."
-                        is ModelLoadingState.Loaded -> modelName ?: "Ready"
-                        is ModelLoadingState.Error -> "Error loading model"
-                        else -> "No model loaded"
-                    },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+            }
+        },
+        navigationIcon = {
+            IconButton(onClick = onSearchClick) {
+                Icon(
+                    Icons.Default.Search,
+                    contentDescription = "Search models and chats",
+                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
             }
         },
         actions = {
-            IconButton(onClick = onModelsClick) {
-                Icon(Icons.Default.Memory, contentDescription = "Models")
-            }
             IconButton(onClick = onSettingsClick) {
-                Icon(Icons.Default.Settings, contentDescription = "Settings")
+                Icon(
+                    Icons.Default.Settings,
+                    contentDescription = "Settings",
+                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                )
             }
-        }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     )
 }
 
+// ============================================================================
+// II. MODEL STATUS & SUGGESTIONS CARD (THE DYNAMIC BANNER)
+// ============================================================================
+
 @Composable
-private fun HeroSection(
+private fun ModelStatusBanner(
     modelName: String?,
     modelLoadingState: ModelLoadingState,
-    onLoadModel: () -> Unit
+    onLoadModel: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(modifier = modifier) {
+        when {
+            // State A: No Model Loaded (New User Flow)
+            modelName == null && modelLoadingState !is ModelLoadingState.Loading -> {
+                NoModelLoadedBanner(onLoadModel = onLoadModel)
+            }
+            // State B: Model Loading
+            modelLoadingState is ModelLoadingState.Loading -> {
+                ModelLoadingBanner(
+                    progress = modelLoadingState.progress,
+                    modelName = modelName
+                )
+            }
+            // State C: Model Loaded (Existing User Flow)
+            modelLoadingState is ModelLoadingState.Loaded -> {
+                ModelLoadedBanner(modelName = modelName ?: "Unknown Model")
+            }
+            // State D: Error
+            modelLoadingState is ModelLoadingState.Error -> {
+                ModelErrorBanner(
+                    error = modelLoadingState.message,
+                    onLoadModel = onLoadModel
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun NoModelLoadedBanner(onLoadModel: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.Transparent
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            Color(0xFFEF4444).copy(alpha = 0.15f),
+                            Color(0xFFDC2626).copy(alpha = 0.1f)
+                        )
+                    )
+                )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(28.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(CircleShape)
+                            .background(
+                                brush = Brush.radialGradient(
+                                    colors = listOf(
+                                        MaterialTheme.colorScheme.error.copy(alpha = 0.2f),
+                                        MaterialTheme.colorScheme.error.copy(alpha = 0.1f)
+                                    )
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CloudOff,
+                            contentDescription = null,
+                            modifier = Modifier.size(36.dp),
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(20.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "No Model Active",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            letterSpacing = 0.3.sp
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "Load a model to unlock AI features",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
+                            lineHeight = 20.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Button(
+                    onClick = onLoadModel,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    ),
+                    contentPadding = PaddingValues(vertical = 16.dp)
+                ) {
+                    Icon(Icons.Default.CloudDownload, contentDescription = null)
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        "Browse Model Library",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = 0.5.sp
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ModelLoadingBanner(
+    progress: Float,
+    modelName: String?
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
+            containerColor = Color.Transparent
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f),
+                            MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.2f)
+                        )
+                    )
+                )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(28.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(36.dp),
+                            color = MaterialTheme.colorScheme.secondary,
+                            strokeWidth = 3.5.dp
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(20.dp))
+                    Column {
+                        Text(
+                            text = "Loading Model...",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            letterSpacing = 0.3.sp
+                        )
+                        if (modelName != null) {
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = modelName,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+                
+                Column {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Progress",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = "${(progress * 100).toInt()}%",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.secondary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    LinearProgressIndicator(
+                        progress = progress,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(8.dp)
+                            .clip(RoundedCornerShape(4.dp)),
+                        color = MaterialTheme.colorScheme.secondary,
+                        trackColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ModelLoadedBanner(modelName: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.Transparent
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.08f)
+                        )
+                    )
+                )
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(28.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(CircleShape)
+                        .background(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.25f),
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                                )
+                            )
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        modifier = Modifier.size(36.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(20.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Inference Ready",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        letterSpacing = 0.3.sp
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = modelName,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Privacy Secured • Local Inference",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Medium,
+                            letterSpacing = 0.3.sp
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ModelErrorBanner(
+    error: String,
+    onLoadModel: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.errorContainer
         )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(20.dp)
         ) {
-            Icon(
-                imageVector = Icons.Outlined.AutoAwesome,
-                contentDescription = null,
-                modifier = Modifier.size(48.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            Text(
-                text = "On-Device AI",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-            
-            Text(
-                text = "Run powerful AI models locally with complete privacy",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-            
-            if (modelName == null && modelLoadingState !is ModelLoadingState.Loading) {
-                Spacer(modifier = Modifier.height(16.dp))
-                FilledTonalButton(
-                    onClick = onLoadModel,
-                    modifier = Modifier.fillMaxWidth(0.6f)
-                ) {
-                    Icon(Icons.Default.Download, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Load a Model")
-                }
-            } else if (modelLoadingState is ModelLoadingState.Loading) {
-                Spacer(modifier = Modifier.height(16.dp))
-                LinearProgressIndicator(
-                    progress = (modelLoadingState as ModelLoadingState.Loading).progress,
-                    modifier = Modifier.fillMaxWidth(0.6f)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Error,
+                    contentDescription = null,
+                    modifier = Modifier.size(40.dp),
+                    tint = MaterialTheme.colorScheme.error
                 )
+                Spacer(modifier = Modifier.width(16.dp))
+                Column {
+                    Text(
+                        text = "Model Loading Failed",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                    Text(
+                        text = error,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            OutlinedButton(
+                onClick = onLoadModel,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Try Another Model")
             }
         }
     }
 }
 
-@Composable
-private fun FeaturesGrid(
-    features: List<FeatureCard>,
-    onFeatureClick: (FeatureCard) -> Unit
-) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            FeatureCardItem(
-                feature = features[0],
-                onClick = { onFeatureClick(features[0]) },
-                modifier = Modifier.weight(1f)
-            )
-            FeatureCardItem(
-                feature = features[1],
-                onClick = { onFeatureClick(features[1]) },
-                modifier = Modifier.weight(1f)
-            )
-        }
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            FeatureCardItem(
-                feature = features[2],
-                onClick = { onFeatureClick(features[2]) },
-                modifier = Modifier.weight(1f)
-            )
-            FeatureCardItem(
-                feature = features[3],
-                onClick = { onFeatureClick(features[3]) },
-                modifier = Modifier.weight(1f)
-            )
-        }
-    }
-}
+// ============================================================================
+// III. FEATURE HUB (HORIZONTAL SCROLLING GRADIENT CARDS)
+// ============================================================================
 
 @Composable
-private fun FeatureCardItem(
-    feature: FeatureCard,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
+private fun CoreFeatureCardItem(
+    feature: CoreFeatureCard,
+    onClick: () -> Unit
 ) {
     Card(
-        modifier = modifier
-            .height(140.dp)
+        modifier = Modifier
+            .width(280.dp)
+            .height(160.dp)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.Transparent
-        )
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
-                    brush = Brush.linearGradient(feature.gradient)
+                    brush = Brush.linearGradient(
+                        colors = feature.gradient
+                    )
                 )
-                .padding(16.dp)
+                .padding(24.dp)
         ) {
             Column(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
+                // Icon - Use PNG if available, otherwise vector icon
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(64.dp)
                         .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.2f)),
+                        .background(Color.White.copy(alpha = 0.25f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = feature.icon,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp)
-                    )
+                    when {
+                        feature.drawableRes != null -> {
+                            Icon(
+                                painter = painterResource(id = feature.drawableRes),
+                                contentDescription = null,
+                                modifier = Modifier.size(250.dp),
+                                tint = Color.White
+                            )
+                        }
+                        feature.icon != null -> {
+                            Icon(
+                                imageVector = feature.icon,
+                                contentDescription = null,
+                                modifier = Modifier.size(36.dp),
+                                tint = Color.White
+                            )
+                        }
+                    }
                 }
                 
+                // Text
                 Column {
                     Text(
                         text = feature.title,
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = Color.White,
+                        letterSpacing = 0.3.sp
                     )
+                    Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = feature.description,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.White.copy(alpha = 0.8f),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White.copy(alpha = 0.95f),
                         maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
+                        lineHeight = 20.sp
                     )
                 }
             }
         }
     }
-}
+}// ============================================================================
+// IV. QUICK ACTIONS (HORIZONTAL CHIPS)
+// ============================================================================
 
 @Composable
-private fun QuickActionsSection(
-    onNewChat: () -> Unit,
-    onHistory: () -> Unit,
-    onModels: () -> Unit
+private fun QuickActionChip(
+    action: SecondaryFeatureChip,
+    onClick: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+        contentColor = MaterialTheme.colorScheme.onSurface
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
         ) {
-            QuickActionButton(
-                icon = Icons.Outlined.Add,
-                label = "New Chat",
-                onClick = onNewChat
+            Icon(
+                imageVector = action.icon,
+                contentDescription = null,
+                modifier = Modifier.size(22.dp),
+                tint = MaterialTheme.colorScheme.primary
             )
-            QuickActionButton(
-                icon = Icons.Outlined.History,
-                label = "History",
-                onClick = onHistory
-            )
-            QuickActionButton(
-                icon = Icons.Outlined.Memory,
-                label = "Models",
-                onClick = onModels
+            Spacer(modifier = Modifier.width(10.dp))
+            Text(
+                text = action.label,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 0.3.sp,
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }
 }
 
-@Composable
-private fun QuickActionButton(
-    icon: ImageVector,
-    label: String,
-    onClick: () -> Unit
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick)
-            .padding(12.dp)
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = MaterialTheme.colorScheme.primary
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
+// ============================================================================
+// V. RECENT CONVERSATIONS PREVIEW (HORIZONTAL CARDS)
+// ============================================================================
 
 @Composable
-private fun RecentConversationsRow(
-    conversations: List<HomeViewModel.RecentConversation>,
-    onConversationClick: (String) -> Unit
+private fun RecentConversationPreviewCard(
+    conversation: HomeViewModel.RecentConversation,
+    onClick: () -> Unit
 ) {
-    LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    Card(
+        modifier = Modifier
+            .width(280.dp)
+            .height(130.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.Transparent
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        items(conversations) { conversation ->
-            Card(
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                        )
+                    )
+                )
+        ) {
+            Row(
                 modifier = Modifier
-                    .width(200.dp)
-                    .clickable { onConversationClick(conversation.id) },
-                shape = RoundedCornerShape(12.dp)
+                    .fillMaxSize()
+                    .padding(20.dp),
+                verticalAlignment = Alignment.Top
             ) {
+                // Icon with gradient background
+                Box(
+                    modifier = Modifier
+                        .size(52.dp)
+                        .clip(CircleShape)
+                        .background(
+                            brush = Brush.linearGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.25f),
+                                    MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f)
+                                )
+                            )
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Chat,
+                        contentDescription = null,
+                        modifier = Modifier.size(26.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+                
+                Spacer(modifier = Modifier.width(16.dp))
+                
+                // Content
                 Column(
-                    modifier = Modifier.padding(12.dp)
+                    modifier = Modifier.weight(1f)
                 ) {
                     Text(
                         text = conversation.title,
-                        style = MaterialTheme.typography.titleSmall,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        letterSpacing = 0.2.sp,
+                        lineHeight = 22.sp
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = conversation.lastMessage,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
                         maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
+                        lineHeight = 18.sp
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = conversation.timeAgo,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.outline
-                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AccessTime,
+                            contentDescription = null,
+                            modifier = Modifier.size(12.dp),
+                            tint = MaterialTheme.colorScheme.outline
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = conversation.timeAgo,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.outline,
+                            letterSpacing = 0.3.sp
+                        )
+                    }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun TipsSection() {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f)
-        )
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Lightbulb,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.tertiary,
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Column {
-                Text(
-                    text = "Pro Tip",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.tertiary
-                )
-                Text(
-                    text = "Smaller models (0.5B-3B) run faster on most devices. Try Qwen 0.5B for quick responses!",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer
-                )
             }
         }
     }

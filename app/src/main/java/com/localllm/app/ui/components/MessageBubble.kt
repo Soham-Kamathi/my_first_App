@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -36,123 +37,174 @@ fun MessageBubble(
     val isUser = message.role == MessageRole.USER
     var showActions by remember { mutableStateOf(false) }
     
+    // Enhanced gradient backgrounds
+    val userGradient = Brush.linearGradient(
+        colors = listOf(
+            Color(0xFF00E5FF),
+            Color(0xFF00B8D4)
+        )
+    )
+    
+    val assistantGradient = Brush.linearGradient(
+        colors = listOf(
+            Color(0xFF1E1E1E),
+            Color(0xFF2A2A2A)
+        )
+    )
+    
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = if (isUser) Alignment.End else Alignment.Start
     ) {
-        // Message bubble
+        // Enhanced message bubble
         Surface(
             modifier = Modifier
                 .widthIn(max = 340.dp)
                 .clip(
                     RoundedCornerShape(
-                        topStart = 20.dp,
-                        topEnd = 20.dp,
-                        bottomStart = if (isUser) 20.dp else 4.dp,
-                        bottomEnd = if (isUser) 4.dp else 20.dp
+                        topStart = 24.dp,
+                        topEnd = 24.dp,
+                        bottomStart = if (isUser) 24.dp else 6.dp,
+                        bottomEnd = if (isUser) 6.dp else 24.dp
                     )
                 ),
             color = if (isUser) {
-                MaterialTheme.colorScheme.primary
+                Color.Transparent
             } else {
-                MaterialTheme.colorScheme.surfaceVariant
+                Color(0xFF1E1E1E)
             },
             onClick = { showActions = !showActions }
         ) {
-            Column(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
-            ) {
-                // Role label for assistant
-                if (!isUser) {
-                    Text(
-                        text = "Assistant",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(bottom = 4.dp)
-                    )
+            Box(
+                modifier = if (isUser) {
+                    Modifier.background(userGradient)
+                } else {
+                    Modifier
                 }
-                
-                // Message content
-                Text(
-                    text = message.content.ifBlank { "..." },
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.2f
-                    ),
-                    color = if (isUser) {
-                        MaterialTheme.colorScheme.onPrimary
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
+            ) {
+                Column(
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
+                ) {
+                    // Role label for assistant
+                    if (!isUser) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .clip(androidx.compose.foundation.shape.CircleShape)
+                                    .background(Color(0xFF00E5FF))
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Assistant",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = Color(0xFF00E5FF),
+                                modifier = Modifier.padding(bottom = 6.dp)
+                            )
+                        }
                     }
-                )
-                
-                // Generation stats for assistant messages
-                if (!isUser && showTokensPerSecond && message.isComplete && message.tokensGenerated > 0) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Outlined.Speed,
-                            contentDescription = null,
-                            modifier = Modifier.size(12.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "${message.tokensGenerated} tokens • ${String.format("%.1f", message.tokensPerSecond())} t/s",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                        )
+                    
+                    // Message content
+                    Text(
+                        text = message.content.ifBlank { "..." },
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.3f
+                        ),
+                        color = if (isUser) {
+                            Color.Black
+                        } else {
+                            Color.White
+                        }
+                    )
+                    
+                    // Enhanced generation stats for assistant messages
+                    if (!isUser && showTokensPerSecond && message.isComplete && message.tokensGenerated > 0) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color(0xFF00E5FF).copy(alpha = 0.15f))
+                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                        ) {
+                            Icon(
+                                Icons.Outlined.Speed,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp),
+                                tint = Color(0xFF00E5FF)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "${message.tokensGenerated} tokens • ${String.format("%.1f", message.tokensPerSecond())} t/s",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color(0xFF00E5FF)
+                            )
+                        }
                     }
                 }
             }
         }
         
-        // Action buttons
+        // Enhanced action buttons
         if (showActions && message.isComplete) {
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 // Copy button
-                IconButton(
+                Surface(
                     onClick = onCopy,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(36.dp),
+                    shape = androidx.compose.foundation.shape.CircleShape,
+                    color = Color(0xFF1E1E1E),
+                    shadowElevation = 2.dp
                 ) {
-                    Icon(
-                        Icons.Default.ContentCopy,
-                        contentDescription = "Copy",
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                
-                // Regenerate button (only for last assistant message)
-                if (onRegenerate != null && !isUser) {
-                    IconButton(
-                        onClick = onRegenerate,
-                        modifier = Modifier.size(32.dp)
-                    ) {
+                    Box(contentAlignment = Alignment.Center) {
                         Icon(
-                            Icons.Default.Refresh,
-                            contentDescription = "Regenerate",
-                            modifier = Modifier.size(16.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            Icons.Default.ContentCopy,
+                            contentDescription = "Copy",
+                            modifier = Modifier.size(18.dp),
+                            tint = Color(0xFF00E5FF)
                         )
                     }
                 }
                 
+                // Regenerate button (only for last assistant message)
+                if (onRegenerate != null && !isUser) {
+                    Surface(
+                        onClick = onRegenerate,
+                        modifier = Modifier.size(36.dp),
+                        shape = androidx.compose.foundation.shape.CircleShape,
+                        color = Color(0xFF1E1E1E),
+                        shadowElevation = 2.dp
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                Icons.Default.Refresh,
+                                contentDescription = "Regenerate",
+                                modifier = Modifier.size(18.dp),
+                                tint = Color(0xFF00E5FF)
+                            )
+                        }
+                    }
+                }
+                
                 // Delete button
-                IconButton(
+                Surface(
                     onClick = onDelete,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(36.dp),
+                    shape = androidx.compose.foundation.shape.CircleShape,
+                    color = Color(0xFF1E1E1E),
+                    shadowElevation = 2.dp
                 ) {
-                    Icon(
-                        Icons.Default.Delete,
-                        contentDescription = "Delete",
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
-                    )
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = "Delete",
+                            modifier = Modifier.size(18.dp),
+                            tint = Color(0xFFFF1744)
+                        )
+                    }
                 }
             }
         }

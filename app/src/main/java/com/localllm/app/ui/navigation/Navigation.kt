@@ -33,6 +33,9 @@ import com.localllm.app.ui.viewmodel.SettingsViewModel
 
 sealed class Screen(val route: String) {
     object Home : Screen("home")
+    object NewChat : Screen("new_chat")
+    object History : Screen("history")
+    object Library : Screen("library")
     object Chat : Screen("chat?conversationId={conversationId}&template={template}") {
         fun createRoute(conversationId: String? = null, templatePrompt: String? = null): String {
             val params = mutableListOf<String>()
@@ -97,6 +100,60 @@ fun LocalLLMNavHost(
                 },
                 onNavigateToHistory = {
                     navController.navigate(Screen.ConversationHistory.route)
+                }
+            )
+        }
+        
+        // New Chat (from bottom nav) - Redirects to Chat screen
+        composable(Screen.NewChat.route) {
+            val viewModel: ChatViewModel = hiltViewModel()
+            
+            ChatScreen(
+                viewModel = viewModel,
+                onNavigateToModels = {
+                    navController.navigate(Screen.ModelLibrary.route)
+                },
+                onNavigateToSettings = {
+                    navController.navigate(Screen.Settings.route)
+                },
+                onNavigateToHistory = {
+                    navController.navigate(Screen.ConversationHistory.route)
+                },
+                onNavigateBack = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = false }
+                    }
+                }
+            )
+        }
+        
+        // History (from bottom nav)
+        composable(Screen.History.route) {
+            val viewModel: ConversationHistoryViewModel = hiltViewModel()
+            
+            ConversationHistoryScreen(
+                viewModel = viewModel,
+                onNavigateBack = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = false }
+                    }
+                },
+                onConversationSelected = { conversationId ->
+                    navController.navigate(Screen.Chat.createRoute(conversationId))
+                }
+            )
+        }
+        
+        // Library/Models (from bottom nav)
+        composable(Screen.Library.route) {
+            val viewModel: ModelLibraryViewModel = hiltViewModel()
+            
+            ModelLibraryScreen(
+                viewModel = viewModel,
+                onNavigateBack = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = false }
+                    }
                 }
             )
         }
