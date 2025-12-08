@@ -11,6 +11,7 @@ import com.localllm.app.domain.usecase.GetStorageStatsUseCase
 import com.localllm.app.domain.usecase.StorageStats
 import com.localllm.app.inference.ModelManager
 import com.localllm.app.util.HardwareCapabilities
+import com.localllm.app.util.HardwareCapabilityDetector
 import com.localllm.app.util.MemoryMonitor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,7 +32,8 @@ class SettingsViewModel @Inject constructor(
     private val modelManager: ModelManager,
     private val memoryMonitor: MemoryMonitor,
     private val hardwareCapabilities: HardwareCapabilities,
-    private val getStorageStatsUseCase: GetStorageStatsUseCase
+    private val getStorageStatsUseCase: GetStorageStatsUseCase,
+    private val hardwareCapabilityDetector: HardwareCapabilityDetector
 ) : ViewModel() {
 
     val userPreferences: StateFlow<UserPreferences> = preferencesDataStore.userPreferencesFlow
@@ -50,9 +52,13 @@ class SettingsViewModel @Inject constructor(
     private val _systemInfo = MutableStateFlow("")
     val systemInfo: StateFlow<String> = _systemInfo.asStateFlow()
 
+    private val _hardwareProfile = MutableStateFlow<HardwareCapabilityDetector.HardwareProfile?>(null)
+    val hardwareProfile: StateFlow<HardwareCapabilityDetector.HardwareProfile?> = _hardwareProfile.asStateFlow()
+
     init {
         loadDeviceInfo()
         loadStorageStats()
+        loadHardwareProfile()
     }
 
     /**
@@ -227,6 +233,48 @@ class SettingsViewModel @Inject constructor(
     }
 
     /**
+     * Update thinking mode setting.
+     */
+    fun updateThinkingMode(enabled: Boolean) {
+        viewModelScope.launch {
+            preferencesDataStore.updateThinkingMode(enabled)
+        }
+    }
+
+    /**
+     * Update web search setting.
+     */
+    fun updateWebSearch(enabled: Boolean) {
+        viewModelScope.launch {
+            preferencesDataStore.updateWebSearch(enabled)
+        }
+    }
+
+    /**
+     * Update GPU acceleration enabled.
+     */
+    fun updateGpuAcceleration(enabled: Boolean) {
+        viewModelScope.launch {
+            preferencesDataStore.updateGpuAcceleration(enabled)
+            // Set recommended GPU layers if enabling
+            if (enabled && userPreferences.value.gpuLayers == 0) {
+                _hardwareProfile.value?.let { profile ->
+                    preferencesDataStore.updateGpuLayers(profile.recommendedGpuLayers)
+                }
+            }
+        }
+    }
+
+    /**
+     * Update GPU layers count.
+     */
+    fun updateGpuLayers(layers: Int) {
+        viewModelScope.launch {
+            preferencesDataStore.updateGpuLayers(layers)
+        }
+    }
+
+    /**
      * Reset generation config to defaults.
      */
     fun resetGenerationConfig() {
@@ -302,6 +350,12 @@ class SettingsViewModel @Inject constructor(
     private fun loadStorageStats() {
         viewModelScope.launch {
             _storageStats.value = getStorageStatsUseCase()
+        }
+    }
+
+    private fun loadHardwareProfile() {
+        viewModelScope.launch {
+            _hardwareProfile.value = hardwareCapabilityDetector.detectHardwareProfile()
         }
     }
 }

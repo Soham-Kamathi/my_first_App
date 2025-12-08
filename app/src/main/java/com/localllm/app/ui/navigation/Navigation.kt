@@ -15,9 +15,11 @@ import com.localllm.app.ui.screen.CodeCompanionScreen
 import com.localllm.app.ui.screen.ConversationHistoryScreen
 import com.localllm.app.ui.screen.ConversationTemplatesScreen
 import com.localllm.app.ui.screen.DocumentChatScreen
+import com.localllm.app.ui.screen.FlashcardScreen
 import com.localllm.app.ui.screen.HomeScreen
 import com.localllm.app.ui.screen.ModelLibraryScreen
 import com.localllm.app.ui.screen.PromptLabScreen
+import com.localllm.app.ui.screen.QuizScreen
 import com.localllm.app.ui.screen.SettingsScreen
 import com.localllm.app.ui.viewmodel.AskImageViewModel
 import com.localllm.app.ui.viewmodel.AudioScribeViewModel
@@ -26,9 +28,11 @@ import com.localllm.app.ui.viewmodel.CodeCompanionViewModel
 import com.localllm.app.ui.viewmodel.ConversationHistoryViewModel
 import com.localllm.app.ui.viewmodel.ConversationTemplatesViewModel
 import com.localllm.app.ui.viewmodel.DocumentChatViewModel
+import com.localllm.app.ui.viewmodel.FlashcardViewModel
 import com.localllm.app.ui.viewmodel.HomeViewModel
 import com.localllm.app.ui.viewmodel.ModelLibraryViewModel
 import com.localllm.app.ui.viewmodel.PromptLabViewModel
+import com.localllm.app.ui.viewmodel.QuizViewModel
 import com.localllm.app.ui.viewmodel.SettingsViewModel
 
 sealed class Screen(val route: String) {
@@ -50,6 +54,8 @@ sealed class Screen(val route: String) {
     object DocumentChat : Screen("document_chat")
     object CodeCompanion : Screen("code_companion")
     object ConversationTemplates : Screen("conversation_templates")
+    object Flashcards : Screen("flashcards")
+    object Quiz : Screen("quiz")
     object ModelLibrary : Screen("model_library")
     object Settings : Screen("settings")
     object ConversationHistory : Screen("conversation_history")
@@ -91,6 +97,12 @@ fun LocalLLMNavHost(
                 },
                 onNavigateToTemplates = {
                     navController.navigate(Screen.ConversationTemplates.route)
+                },
+                onNavigateToFlashcards = {
+                    navController.navigate(Screen.Flashcards.route)
+                },
+                onNavigateToQuiz = {
+                    navController.navigate(Screen.Quiz.route)
                 },
                 onNavigateToModels = {
                     navController.navigate(Screen.ModelLibrary.route)
@@ -274,6 +286,30 @@ fun LocalLLMNavHost(
                     navController.navigate(Screen.Chat.createRoute(templatePrompt = template.prompt)) {
                         popUpTo(Screen.Home.route)
                     }
+                }
+            )
+        }
+        
+        // Flashcards
+        composable(Screen.Flashcards.route) {
+            val viewModel: FlashcardViewModel = hiltViewModel()
+            
+            FlashcardScreen(
+                viewModel = viewModel,
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        
+        // Quiz
+        composable(Screen.Quiz.route) {
+            val viewModel: QuizViewModel = hiltViewModel()
+            
+            QuizScreen(
+                viewModel = viewModel,
+                onNavigateBack = {
+                    navController.popBackStack()
                 }
             )
         }

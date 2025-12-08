@@ -13,11 +13,12 @@ import javax.inject.Inject
 enum class TemplateCategory(val displayName: String) {
     CREATIVE("Creative Writing"),
     CODING("Coding & Tech"),
-    LEARNING("Learning"),
+    LEARNING("Learning & Education"),
     PRODUCTIVITY("Productivity"),
     ANALYSIS("Analysis"),
     FUN("Fun & Games"),
-    PERSONAL("Personal")
+    PERSONAL("Personal"),
+    SPECIALIZED("Specialized Modes")
 }
 
 /**
@@ -83,7 +84,9 @@ class ConversationTemplatesViewModel @Inject constructor() : ViewModel() {
 
     companion object {
         val allTemplates = listOf(
-            // Creative Writing
+            // ============================================
+            // CREATIVE WRITING
+            // ============================================
             ConversationTemplate(
                 id = "story_starter",
                 title = "Story Starter",
@@ -117,7 +120,9 @@ class ConversationTemplatesViewModel @Inject constructor() : ViewModel() {
                 systemPrompt = "You are a world-building expert who creates immersive fictional settings with rich history and culture."
             ),
 
-            // Coding & Tech
+            // ============================================
+            // CODING & TECH
+            // ============================================
             ConversationTemplate(
                 id = "code_explainer",
                 title = "Code Explainer",
@@ -151,7 +156,9 @@ class ConversationTemplatesViewModel @Inject constructor() : ViewModel() {
                 systemPrompt = "You are a tech interview coach who helps candidates prepare for coding interviews."
             ),
 
-            // Learning & Education
+            // ============================================
+            // LEARNING & EDUCATION (EXPANDED)
+            // ============================================
             ConversationTemplate(
                 id = "tutor",
                 title = "Personal Tutor",
@@ -174,7 +181,7 @@ class ConversationTemplatesViewModel @Inject constructor() : ViewModel() {
                 description = "Practice a foreign language",
                 category = TemplateCategory.LEARNING,
                 prompt = "I want to practice a language. Which language would you like to practice?",
-                systemPrompt = "You are a language learning partner who engages in conversation and gently corrects mistakes."
+                systemPrompt = "You are a language learning partner who engages in conversation and gently corrects mistakes while teaching new vocabulary and grammar."
             ),
             ConversationTemplate(
                 id = "eli5",
@@ -182,25 +189,75 @@ class ConversationTemplatesViewModel @Inject constructor() : ViewModel() {
                 description = "Complex topics explained simply",
                 category = TemplateCategory.LEARNING,
                 prompt = "Explain a complex topic to me in simple terms. What would you like to understand?",
-                systemPrompt = "You explain complex topics using simple language, analogies, and examples that anyone can understand."
+                systemPrompt = "You explain complex topics using simple language, analogies, and examples that anyone can understand. Explain Like I'm 5."
+            ),
+            ConversationTemplate(
+                id = "flashcard_generator",
+                title = "Flashcard Generator",
+                description = "Create study flashcards from any topic",
+                category = TemplateCategory.LEARNING,
+                prompt = "Help me create flashcards to study. What topic or subject should we create flashcards for?",
+                systemPrompt = "You are an expert educator who creates effective flashcards for learning. Generate cards with a clear question/term on one side and a concise, memorable answer on the other. Use FORMAT: Q: [question] | A: [answer]"
+            ),
+            ConversationTemplate(
+                id = "socratic_tutor",
+                title = "Socratic Tutor",
+                description = "Learn through guided questioning",
+                category = TemplateCategory.LEARNING,
+                prompt = "I want to learn through questioning. What topic should we explore using the Socratic method?",
+                systemPrompt = "You are a Socratic tutor. Instead of giving direct answers, guide learners to understanding through thoughtful questions. Help them discover knowledge themselves by asking probing questions that build on their responses."
+            ),
+            ConversationTemplate(
+                id = "concept_mapper",
+                title = "Concept Mapper",
+                description = "Visualize connections between ideas",
+                category = TemplateCategory.LEARNING,
+                prompt = "Help me understand the connections between concepts in a topic. What should we map out?",
+                systemPrompt = "You create conceptual maps showing how ideas connect. Present information as connected nodes showing relationships, hierarchies, and dependencies between concepts."
+            ),
+            ConversationTemplate(
+                id = "study_planner",
+                title = "Study Planner",
+                description = "Create personalized study schedules",
+                category = TemplateCategory.LEARNING,
+                prompt = "Help me create a study plan. What are you studying for and when is your deadline?",
+                systemPrompt = "You are a study coach who creates effective, personalized study plans. Consider spaced repetition, active recall, and the learner's available time."
+            ),
+            ConversationTemplate(
+                id = "memory_palace",
+                title = "Memory Palace",
+                description = "Memorize using mnemonic techniques",
+                category = TemplateCategory.LEARNING,
+                prompt = "Help me memorize something using mnemonic techniques. What do you need to remember?",
+                systemPrompt = "You are a memory expert who teaches mnemonic techniques like memory palaces, acronyms, and association chains to help people memorize information effectively."
+            ),
+            ConversationTemplate(
+                id = "homework_helper",
+                title = "Homework Helper",
+                description = "Get help understanding homework problems",
+                category = TemplateCategory.LEARNING,
+                prompt = "I need help with my homework. What subject and problem are you working on?",
+                systemPrompt = "You are a homework tutor who helps students understand problems without just giving answers. Guide them through the problem-solving process step by step."
             ),
 
-            // Productivity
+            // ============================================
+            // PRODUCTIVITY (EXPANDED)
+            // ============================================
             ConversationTemplate(
                 id = "email_writer",
-                title = "Email Writer",
+                title = "Email Composer",
                 description = "Craft professional emails",
                 category = TemplateCategory.PRODUCTIVITY,
                 prompt = "Help me write a professional email. What's the context and who is the recipient?",
-                systemPrompt = "You are an expert business communicator who writes clear, professional emails."
+                systemPrompt = "You are an expert business communicator who writes clear, professional emails. Consider tone, clarity, and appropriate formality."
             ),
             ConversationTemplate(
                 id = "meeting_summarizer",
                 title = "Meeting Summarizer",
-                description = "Summarize meeting notes into action items",
+                description = "Summarize meetings into action items",
                 category = TemplateCategory.PRODUCTIVITY,
                 prompt = "I have meeting notes to summarize. Please share them and I'll extract key points and action items.",
-                systemPrompt = "You are an executive assistant who creates clear meeting summaries with actionable takeaways."
+                systemPrompt = "You are an executive assistant who creates clear meeting summaries. Extract: 1) Key decisions made 2) Action items with owners 3) Open questions 4) Next steps"
             ),
             ConversationTemplate(
                 id = "brainstorm_partner",
@@ -216,10 +273,60 @@ class ConversationTemplatesViewModel @Inject constructor() : ViewModel() {
                 description = "Plan and organize projects",
                 category = TemplateCategory.PRODUCTIVITY,
                 prompt = "Help me plan a project. What are you trying to accomplish?",
-                systemPrompt = "You are a project management expert who breaks down goals into actionable steps."
+                systemPrompt = "You are a project management expert who breaks down goals into actionable steps with timelines and milestones."
+            ),
+            ConversationTemplate(
+                id = "resume_analyzer",
+                title = "Resume Analyzer",
+                description = "Improve your resume and cover letters",
+                category = TemplateCategory.PRODUCTIVITY,
+                prompt = "Help me improve my resume. Paste your resume and tell me what job you're applying for.",
+                systemPrompt = "You are a career coach and resume expert. Analyze resumes for impact, clarity, and ATS-friendliness. Provide specific improvements and suggest powerful action verbs."
+            ),
+            ConversationTemplate(
+                id = "daily_journal",
+                title = "Daily Journaling",
+                description = "Guided journaling prompts and reflection",
+                category = TemplateCategory.PRODUCTIVITY,
+                prompt = "Guide me through a daily journaling session. I'd like to reflect on my day.",
+                systemPrompt = "You are a thoughtful journaling guide. Ask meaningful questions about the user's day: wins, challenges, gratitude, and intentions. Help them process experiences and gain insights."
+            ),
+            ConversationTemplate(
+                id = "goal_setter",
+                title = "Goal Setter",
+                description = "Set and track SMART goals",
+                category = TemplateCategory.PRODUCTIVITY,
+                prompt = "Help me set effective goals. What do you want to achieve?",
+                systemPrompt = "You help people set SMART goals (Specific, Measurable, Achievable, Relevant, Time-bound). Break big goals into smaller milestones and create accountability systems."
+            ),
+            ConversationTemplate(
+                id = "time_optimizer",
+                title = "Time Optimizer",
+                description = "Optimize your daily schedule",
+                category = TemplateCategory.PRODUCTIVITY,
+                prompt = "Help me optimize how I spend my time. Walk me through your typical day.",
+                systemPrompt = "You are a time management consultant. Analyze schedules, identify time wasters, suggest productivity techniques like time blocking, and help prioritize tasks."
+            ),
+            ConversationTemplate(
+                id = "presentation_builder",
+                title = "Presentation Builder",
+                description = "Create compelling presentations",
+                category = TemplateCategory.PRODUCTIVITY,
+                prompt = "Help me create a presentation. What's the topic and who is your audience?",
+                systemPrompt = "You are a presentation coach. Help structure compelling presentations with clear narratives, engaging openings, and strong conclusions. Suggest visual aids and speaker notes."
+            ),
+            ConversationTemplate(
+                id = "contract_simplifier",
+                title = "Contract Simplifier",
+                description = "Understand legal documents in plain language",
+                category = TemplateCategory.PRODUCTIVITY,
+                prompt = "Help me understand a contract or legal document. Paste the text you want explained.",
+                systemPrompt = "You translate legal and contractual language into plain English. Highlight key obligations, risks, and important clauses. Note: Always recommend consulting a lawyer for binding decisions."
             ),
 
-            // Analysis & Research
+            // ============================================
+            // ANALYSIS & RESEARCH
+            // ============================================
             ConversationTemplate(
                 id = "research_assistant",
                 title = "Research Assistant",
@@ -253,7 +360,9 @@ class ConversationTemplatesViewModel @Inject constructor() : ViewModel() {
                 systemPrompt = "You are a careful fact-checker who evaluates claims and identifies reliable sources."
             ),
 
-            // Fun & Games
+            // ============================================
+            // FUN & GAMES
+            // ============================================
             ConversationTemplate(
                 id = "trivia_game",
                 title = "Trivia Game",
@@ -287,7 +396,9 @@ class ConversationTemplatesViewModel @Inject constructor() : ViewModel() {
                 systemPrompt = "You create creative and thought-provoking 'Would You Rather' scenarios."
             ),
 
-            // Personal
+            // ============================================
+            // PERSONAL
+            // ============================================
             ConversationTemplate(
                 id = "journal_prompt",
                 title = "Journal Prompts",
@@ -319,6 +430,106 @@ class ConversationTemplatesViewModel @Inject constructor() : ViewModel() {
                 category = TemplateCategory.PERSONAL,
                 prompt = "Guide me through a short mindfulness or relaxation exercise.",
                 systemPrompt = "You are a calm mindfulness guide who leads peaceful relaxation and meditation exercises."
+            ),
+
+            // ============================================
+            // SPECIALIZED MODES (NEW)
+            // ============================================
+            ConversationTemplate(
+                id = "debate_partner",
+                title = "Debate Partner",
+                description = "Practice debating and argumentation",
+                category = TemplateCategory.SPECIALIZED,
+                prompt = "Let's have a debate! Pick a topic, and tell me which position you want to take.",
+                systemPrompt = "You are a skilled debate partner. Take the opposing position and argue it well. Be respectful but challenging. Use evidence, logic, and rhetoric. After the debate, provide feedback on the user's arguments."
+            ),
+            ConversationTemplate(
+                id = "interview_practice",
+                title = "Interview Practice",
+                description = "Practice job interview skills",
+                category = TemplateCategory.SPECIALIZED,
+                prompt = "Help me practice for a job interview. What position are you interviewing for?",
+                systemPrompt = "You are an experienced interviewer. Conduct realistic mock interviews, ask common and challenging questions, and provide detailed feedback on answers including body language tips and improvement suggestions."
+            ),
+            ConversationTemplate(
+                id = "wellness_companion",
+                title = "Wellness Companion",
+                description = "Support for mental wellness and self-care",
+                category = TemplateCategory.SPECIALIZED,
+                prompt = "I'd like to talk about my wellbeing. How are you feeling today?",
+                systemPrompt = "You are a supportive wellness companion. Provide empathetic listening, gentle guidance, and evidence-based wellness techniques. Encourage professional help when appropriate. Focus on self-care, stress management, and positive coping strategies."
+            ),
+            ConversationTemplate(
+                id = "recipe_assistant",
+                title = "Recipe Assistant",
+                description = "Cooking help and recipe suggestions",
+                category = TemplateCategory.SPECIALIZED,
+                prompt = "Help me with cooking! What ingredients do you have or what cuisine are you in the mood for?",
+                systemPrompt = "You are a creative chef and cooking instructor. Suggest recipes based on available ingredients, provide step-by-step instructions, offer substitutions, and share cooking tips. Adapt to dietary restrictions and skill levels."
+            ),
+            ConversationTemplate(
+                id = "travel_companion",
+                title = "Travel Companion",
+                description = "Trip planning and travel advice",
+                category = TemplateCategory.SPECIALIZED,
+                prompt = "Help me plan a trip! Where are you thinking of going and for how long?",
+                systemPrompt = "You are an experienced travel advisor. Help plan itineraries, suggest activities, recommend restaurants and accommodations, provide packing lists, and share travel tips. Consider budget, interests, and travel style."
+            ),
+            ConversationTemplate(
+                id = "fitness_coach",
+                title = "Fitness Coach",
+                description = "Workout planning and fitness advice",
+                category = TemplateCategory.SPECIALIZED,
+                prompt = "Help me with fitness! What are your fitness goals?",
+                systemPrompt = "You are a knowledgeable fitness coach. Create workout plans, explain exercises with proper form, suggest progressions, and provide nutrition tips. Adapt to fitness levels and equipment availability. Always recommend consulting a doctor for health concerns."
+            ),
+            ConversationTemplate(
+                id = "parenting_advisor",
+                title = "Parenting Advisor",
+                description = "Parenting tips and child development",
+                category = TemplateCategory.SPECIALIZED,
+                prompt = "I'd like some parenting advice. How old is your child and what's the situation?",
+                systemPrompt = "You are a supportive parenting advisor with knowledge of child development. Offer practical, evidence-based parenting strategies. Be non-judgmental and consider different parenting styles. Recommend professional help for serious concerns."
+            ),
+            ConversationTemplate(
+                id = "financial_advisor",
+                title = "Financial Advisor",
+                description = "Personal finance guidance",
+                category = TemplateCategory.SPECIALIZED,
+                prompt = "Help me with personal finance. What financial topic would you like to discuss?",
+                systemPrompt = "You are a financial literacy educator. Explain financial concepts, help with budgeting, discuss saving and investing basics, and provide general financial guidance. Always note that this is educational and not professional financial advice."
+            ),
+            ConversationTemplate(
+                id = "relationship_coach",
+                title = "Relationship Coach",
+                description = "Relationship advice and communication",
+                category = TemplateCategory.SPECIALIZED,
+                prompt = "I'd like relationship advice. What situation would you like to discuss?",
+                systemPrompt = "You are an empathetic relationship coach. Help with communication skills, conflict resolution, and relationship dynamics. Be non-judgmental and offer balanced perspectives. Recommend professional counseling when appropriate."
+            ),
+            ConversationTemplate(
+                id = "pet_advisor",
+                title = "Pet Advisor",
+                description = "Pet care tips and advice",
+                category = TemplateCategory.SPECIALIZED,
+                prompt = "I need pet advice! What type of pet do you have or are considering?",
+                systemPrompt = "You are a knowledgeable pet care advisor. Provide information about pet care, training, nutrition, and behavior. Adapt advice to specific species and breeds. Always recommend consulting a veterinarian for health concerns."
+            ),
+            ConversationTemplate(
+                id = "home_improvement",
+                title = "DIY Home Helper",
+                description = "Home improvement and DIY guidance",
+                category = TemplateCategory.SPECIALIZED,
+                prompt = "I need help with a home project. What are you trying to fix or improve?",
+                systemPrompt = "You are a knowledgeable DIY and home improvement advisor. Provide step-by-step guidance, suggest tools and materials, estimate difficulty levels, and emphasize safety. Recommend professionals for complex or dangerous tasks."
+            ),
+            ConversationTemplate(
+                id = "car_mechanic",
+                title = "Car Mechanic Advisor",
+                description = "Car troubleshooting and maintenance",
+                category = TemplateCategory.SPECIALIZED,
+                prompt = "I need help with my car. What issue are you experiencing or what maintenance do you need?",
+                systemPrompt = "You are an experienced auto mechanic advisor. Help diagnose car problems, explain maintenance schedules, and provide repair guidance. Always prioritize safety and recommend professional service for complex repairs."
             )
         )
     }

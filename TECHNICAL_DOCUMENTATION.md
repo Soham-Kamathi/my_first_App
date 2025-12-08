@@ -85,12 +85,16 @@ LocalLLM solves these by running AI models entirely on your device.
 | Feature | Description |
 |---------|-------------|
 | AI Chat | ChatGPT-like conversations |
+| Thinking Mode | Chain-of-thought reasoning display |
+| Web Search | LLM references web search results |
 | Prompt Lab | Experiment with different prompts |
 | Ask Image | Analyze images with AI (vision models) |
 | Audio Scribe | Transcribe and summarize audio |
 | Document Chat | Upload PDFs/docs and ask questions |
 | Code Companion | Code explanation, debugging, generation |
-| Conversation Templates | Pre-made conversation starters |
+| Conversation Templates | 60+ pre-made conversation starters |
+| Interactive Flashcards | AI-generated learning flashcards |
+| Quiz Mode | AI-generated quizzes for testing |
 | Text-to-Speech | Read AI responses aloud |
 | Export & Share | Save conversations as text/JSON |
 
@@ -1032,6 +1036,166 @@ object ConversationExporter {
 }
 ```
 
+### 9.7 Thinking Mode (Chain-of-Thought)
+
+**Purpose:** Enables models that support `<think>` tags to show their reasoning process.
+
+**Implementation:**
+```kotlin
+// ThinkingModeParser.kt
+data class ThinkingBlock(
+    val thinkingContent: String,
+    val outputContent: String
+)
+
+object ThinkingModeParser {
+    // Parses <think>...</think> tags from model output
+    fun parseThinkingContent(text: String): ParsedThinkingContent
+    fun hasThinkingTags(text: String): Boolean
+    fun stripThinkingTags(text: String): String
+}
+```
+
+**Flow:**
+1. User enables Thinking Mode in Settings
+2. Model response contains `<think>reasoning</think>actual response`
+3. Parser extracts thinking blocks
+4. UI displays thinking content in collapsible section
+5. Main response shown separately
+
+**Benefits:**
+- Transparency into AI reasoning
+- Better debugging of AI responses
+- Educational tool for understanding LLM behavior
+
+### 9.8 Web Search Integration
+
+**Purpose:** Allows the LLM to reference web search results when answering questions.
+
+**Implementation:**
+```kotlin
+// WebSearchService.kt
+@Singleton
+class WebSearchService @Inject constructor() {
+    data class SearchResult(
+        val title: String,
+        val snippet: String,
+        val url: String
+    )
+    
+    suspend fun search(query: String, maxResults: Int = 5): List<SearchResult>
+}
+```
+
+**Flow:**
+1. User enables Web Search in Settings
+2. User sends message with search query
+3. WebSearchService queries DuckDuckGo
+4. Search results prepended to prompt as context
+5. LLM generates response with web context
+
+**Features:**
+- No API key required (uses DuckDuckGo HTML)
+- Results include title, snippet, and URL
+- Configurable result count
+
+### 9.9 Interactive Flashcards
+
+**Purpose:** AI-powered flashcard generation for learning and memorization.
+
+**Key Classes:**
+- `FlashcardScreen.kt` - Interactive flashcard UI
+- `FlashcardViewModel.kt` - State management
+
+**Features:**
+- AI generation from any topic
+- Manual card creation
+- Multiple decks support
+- Flip animation for reveal
+- Study mode with progress tracking
+- Quiz mode for self-testing
+- Spaced repetition concepts (known/unknown marking)
+
+**Data Model:**
+```kotlin
+data class Flashcard(
+    val id: String,
+    val question: String,
+    val answer: String,
+    val isKnown: Boolean = false,
+    val timesReviewed: Int = 0
+)
+
+data class FlashcardDeck(
+    val id: String,
+    val name: String,
+    val cards: List<Flashcard>
+)
+```
+
+### 9.10 Quiz Generation
+
+**Purpose:** AI-generated quizzes for testing knowledge.
+
+**Key Classes:**
+- `QuizScreen.kt` - Quiz UI with scoring
+- `QuizViewModel.kt` - Quiz state management
+
+**Question Types:**
+- Multiple choice (4 options)
+- True/False
+- Fill-in-the-blank
+
+**Features:**
+- AI generates questions from any topic
+- Configurable question count
+- Instant feedback on answers
+- Score tracking and summary
+- Explanations for correct answers
+
+**Data Model:**
+```kotlin
+data class QuizQuestion(
+    val id: String,
+    val question: String,
+    val type: QuestionType,
+    val options: List<String>,
+    val correctAnswer: String,
+    val explanation: String
+)
+
+enum class QuestionType {
+    MULTIPLE_CHOICE, TRUE_FALSE, FILL_BLANK
+}
+```
+
+### 9.11 Conversation Templates (Expanded)
+
+**Template Categories:**
+
+| Category | Count | Description |
+|----------|-------|-------------|
+| Creative | 8 | Writing, storytelling, poetry |
+| Coding | 8 | Programming help and debugging |
+| Learning | 8 | Education, explanations, tutoring |
+| Productivity | 8 | Tasks, planning, organization |
+| Analysis | 8 | Data, research, evaluation |
+| Fun | 8 | Games, entertainment, humor |
+| Personal | 8 | Advice, wellness, life |
+| Specialized | 8 | Debate, interview, recipes, travel |
+
+**Total: 60+ templates** covering all use cases.
+
+**Specialized Mode Examples:**
+- **Debate Partner**: Argues opposing viewpoints
+- **Interview Practice**: Mock job interviews
+- **Wellness Check-in**: Mental health conversations
+- **Recipe Chef**: Cooking assistance
+- **Travel Planner**: Trip planning help
+- **Legal Advisor**: Basic legal questions
+- **Financial Coach**: Money management
+- **Language Tutor**: Language learning
+
 ---
 
 ## 10. Model Management
@@ -1376,6 +1540,12 @@ New models can be added to the model catalog by:
 | `InferenceEngine.kt` | Prompt building, generation |
 | `ChatViewModel.kt` | Chat screen logic |
 | `ChatScreen.kt` | Chat UI |
+| `FlashcardScreen.kt` | Interactive flashcard learning UI |
+| `FlashcardViewModel.kt` | Flashcard state and AI generation |
+| `QuizScreen.kt` | Quiz generation and scoring UI |
+| `QuizViewModel.kt` | Quiz state management |
+| `WebSearchService.kt` | DuckDuckGo web search integration |
+| `ThinkingModeParser.kt` | Parse chain-of-thought tags |
 | `LocalLLMDatabase.kt` | Room database definition |
 | `ConversationDao.kt` | Database queries |
 | `ModelRepository.kt` | Model data + catalog |

@@ -18,7 +18,13 @@ data class UserPreferences(
     val threadCount: Int = 0, // 0 means auto-detect
     val useNNAPI: Boolean = true,
     val useMmap: Boolean = true,
-    val contextCacheEnabled: Boolean = true
+    val contextCacheEnabled: Boolean = true,
+    // GPU/Hardware Acceleration
+    val gpuAccelerationEnabled: Boolean = false, // Enable GPU offloading (Vulkan)
+    val gpuLayers: Int = 0,                      // Number of layers on GPU (0=auto)
+    // New AI features
+    val thinkingModeEnabled: Boolean = false,  // Chain-of-thought visualization
+    val webSearchEnabled: Boolean = false       // Web search before LLM response
 ) {
     companion object {
         const val DEFAULT_SYSTEM_PROMPT = "You are a helpful AI assistant. " +

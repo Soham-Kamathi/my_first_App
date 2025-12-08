@@ -209,4 +209,5 @@ private fun getCategoryIcon(category: TemplateCategory): ImageVector = when (cat
     TemplateCategory.ANALYSIS -> Icons.Default.Analytics
     TemplateCategory.FUN -> Icons.Default.SportsEsports
     TemplateCategory.PERSONAL -> Icons.Default.Person
+    TemplateCategory.SPECIALIZED -> Icons.Default.Star
 }
