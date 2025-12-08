@@ -1,14 +1,21 @@
 package com.localllm.app.ui.screen
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+//import androidx.compose.material3.TabRowDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -19,6 +26,8 @@ import com.localllm.app.ui.components.ModelCard
 import com.localllm.app.ui.components.DeviceCapabilityCard
 import com.localllm.app.ui.viewmodel.ModelLibraryTab
 import com.localllm.app.ui.viewmodel.ModelLibraryViewModel
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
+
 
 /**
  * Model library screen for browsing, downloading, and loading models.
@@ -45,10 +54,20 @@ fun ModelLibraryScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Model Library") },
+                title = { 
+                    Text(
+                        "Model Library",
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White
+                    ) 
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.Default.ArrowBack, 
+                            contentDescription = "Back",
+                            tint = Color.White
+                        )
                     }
                 },
                 actions = {
@@ -59,13 +78,21 @@ fun ModelLibraryScreen(
                         if (isRefreshing) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(24.dp),
-                                strokeWidth = 2.dp
+                                strokeWidth = 2.dp,
+                                color = Color(0xFF00E5FF)
                             )
                         } else {
-                            Icon(Icons.Default.Refresh, contentDescription = "Refresh")
+                            Icon(
+                                Icons.Default.Refresh, 
+                                contentDescription = "Refresh",
+                                tint = Color(0xFF00E5FF)
+                            )
                         }
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFF000000)
+                )
             )
         }
     ) { paddingValues ->
@@ -80,75 +107,110 @@ fun ModelLibraryScreen(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
             
-            // Storage info
+            // Enhanced storage info
             storageStats?.let { stats ->
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 4.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    color = Color(0xFF00E5FF).copy(alpha = 0.15f),
                     shape = MaterialTheme.shapes.small
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
                             text = "${stats.downloadedModelsCount} models downloaded",
-                            style = MaterialTheme.typography.bodySmall
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                fontWeight = FontWeight.Medium
+                            ),
+                            color = Color.White
                         )
                         Text(
                             text = stats.formattedSize(),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            color = Color(0xFF00E5FF)
                         )
                     }
                 }
             }
             
-            // Tab row
+            // Enhanced tab row
             TabRow(
                 selectedTabIndex = selectedTab.ordinal,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            ) {
+                modifier = Modifier.padding(horizontal = 16.dp),
+                containerColor = Color.Transparent,
+                contentColor = Color(0xFF00E5FF),
+                indicator = { tabPositions ->
+                    TabRowDefaults.Indicator(
+                        modifier = Modifier.tabIndicatorOffset(
+                            tabPositions[selectedTab.ordinal]
+                        ),
+                        color = Color(0xFF00E5FF),
+                        height = 3.dp
+                    )
+                }
+            )
+            {
                 Tab(
                     selected = selectedTab == ModelLibraryTab.DOWNLOADED,
                     onClick = { viewModel.setSelectedTab(ModelLibraryTab.DOWNLOADED) },
-                    text = { Text("Downloaded (${downloadedModels.size})") }
+                    text = { 
+                        Text(
+                            "Downloaded (${downloadedModels.size})",
+                            fontWeight = if (selectedTab == ModelLibraryTab.DOWNLOADED) FontWeight.SemiBold else FontWeight.Normal,
+                            color = if (selectedTab == ModelLibraryTab.DOWNLOADED) Color(0xFF00E5FF) else Color(0xFFB0B0B0)
+                        ) 
+                    }
                 )
                 Tab(
                     selected = selectedTab == ModelLibraryTab.AVAILABLE,
                     onClick = { viewModel.setSelectedTab(ModelLibraryTab.AVAILABLE) },
-                    text = { Text("Available (${availableModels.size})") }
+                    text = { 
+                        Text(
+                            "Available (${availableModels.size})",
+                            fontWeight = if (selectedTab == ModelLibraryTab.AVAILABLE) FontWeight.SemiBold else FontWeight.Normal,
+                            color = if (selectedTab == ModelLibraryTab.AVAILABLE) Color(0xFF00E5FF) else Color(0xFFB0B0B0)
+                        ) 
+                    }
                 )
             }
             
-            // Error message
+            // Enhanced error message
             errorMessage?.let { error ->
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
-                    color = MaterialTheme.colorScheme.errorContainer,
+                    color = Color(0xFFFF1744).copy(alpha = 0.15f),
                     shape = MaterialTheme.shapes.medium
                 ) {
                     Row(
-                        modifier = Modifier.padding(12.dp),
+                        modifier = Modifier.padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
                             Icons.Default.Error,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error
+                            tint = Color(0xFFFF1744),
+                            modifier = Modifier.size(24.dp)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
                         Text(
                             text = error,
                             style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            color = Color.White
                         )
                         IconButton(onClick = { viewModel.clearError() }) {
-                            Icon(Icons.Default.Close, contentDescription = "Dismiss")
+                            Icon(
+                                Icons.Default.Close, 
+                                contentDescription = "Dismiss",
+                                tint = Color(0xFFFF1744)
+                            )
                         }
                     }
                 }
@@ -168,27 +230,45 @@ fun ModelLibraryScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            if (selectedTab == ModelLibraryTab.DOWNLOADED) {
-                                Icons.Default.FolderOff
-                            } else {
-                                Icons.Default.CloudOff
-                            },
-                            contentDescription = null,
-                            modifier = Modifier.size(64.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
+                        // Enhanced empty state icon
+                        Box(
+                            modifier = Modifier
+                                .size(96.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    Brush.radialGradient(
+                                        colors = listOf(
+                                            Color(0xFF00E5FF).copy(alpha = 0.2f),
+                                            Color.Transparent
+                                        )
+                                    )
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                if (selectedTab == ModelLibraryTab.DOWNLOADED) {
+                                    Icons.Default.FolderOff
+                                } else {
+                                    Icons.Default.CloudOff
+                                },
+                                contentDescription = null,
+                                modifier = Modifier.size(48.dp),
+                                tint = Color(0xFF00E5FF)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(24.dp))
                         Text(
                             text = if (selectedTab == ModelLibraryTab.DOWNLOADED) {
                                 "No downloaded models"
                             } else {
                                 "No models available"
                             },
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            color = Color.White
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
                         Text(
                             text = if (selectedTab == ModelLibraryTab.DOWNLOADED) {
                                 "Browse available models to download"
@@ -196,7 +276,7 @@ fun ModelLibraryScreen(
                                 "Pull to refresh the catalog"
                             },
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                            color = Color(0xFFB0B0B0)
                         )
                     }
                 }

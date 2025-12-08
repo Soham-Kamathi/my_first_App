@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -32,19 +33,25 @@ fun ChatInput(
 ) {
     var text by remember { mutableStateOf("") }
     
-    // Use a transparent surface for the input area to let the background show through
-    // but add a subtle gradient or blur if possible (simplified here to just padding)
+    // Enhanced background with gradient
+    val backgroundGradient = Brush.verticalGradient(
+        colors = listOf(
+            Color(0xFF121212).copy(alpha = 0.98f),
+            Color(0xFF1A1A1A).copy(alpha = 0.98f)
+        )
+    )
+    
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.95f))
-            .padding(vertical = 12.dp, horizontal = 16.dp)
+            .background(backgroundGradient)
+            .padding(vertical = 16.dp, horizontal = 20.dp)
     ) {
         Row(
             verticalAlignment = Alignment.Bottom,
             modifier = Modifier.fillMaxWidth()
         ) {
-            // Text input
+            // Enhanced text input
             OutlinedTextField(
                 value = text,
                 onValueChange = { text = it },
@@ -56,16 +63,16 @@ fun ChatInput(
                         else if (isGenerating) "Generating..."
                         else "Type a message...",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                     ) 
                 },
-                shape = RoundedCornerShape(24.dp),
+                shape = RoundedCornerShape(28.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                    cursorColor = MaterialTheme.colorScheme.primary
+                    focusedBorderColor = Color(0xFF00E5FF).copy(alpha = 0.6f),
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                    focusedContainerColor = Color(0xFF1E1E1E),
+                    unfocusedContainerColor = Color(0xFF1A1A1A),
+                    cursorColor = Color(0xFF00E5FF)
                 ),
                 keyboardOptions = KeyboardOptions(
                     imeAction = ImeAction.Send
@@ -83,13 +90,13 @@ fun ChatInput(
                     if (text.isNotBlank() && !isGenerating) {
                         IconButton(
                             onClick = { text = "" },
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(24.dp)
                         ) {
                             Icon(
                                 Icons.Default.Clear,
                                 contentDescription = "Clear",
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(18.dp)
                             )
                         }
                     }
@@ -97,19 +104,19 @@ fun ChatInput(
                 textStyle = MaterialTheme.typography.bodyMedium
             )
             
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(16.dp))
             
-            // Send or Stop button with animation
+            // Enhanced send/stop button with gradient
             val containerColor = if (isGenerating) {
-                MaterialTheme.colorScheme.errorContainer
+                Color(0xFFFF1744) // Bright red for stop
             } else {
-                MaterialTheme.colorScheme.primary
+                Color(0xFF00E5FF) // Cyan for send
             }
             
             val contentColor = if (isGenerating) {
-                MaterialTheme.colorScheme.onErrorContainer
+                Color.White
             } else {
-                MaterialTheme.colorScheme.onPrimary
+                Color.Black
             }
             
             FilledIconButton(
@@ -122,18 +129,18 @@ fun ChatInput(
                     }
                 },
                 enabled = isGenerating || (text.isNotBlank() && enabled),
-                modifier = Modifier.size(52.dp),
+                modifier = Modifier.size(56.dp),
                 colors = IconButtonDefaults.filledIconButtonColors(
                     containerColor = containerColor,
                     contentColor = contentColor,
-                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    disabledContainerColor = Color(0xFF1E1E1E),
                     disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
                 )
             ) {
                 Icon(
                     if (isGenerating) Icons.Default.Stop else Icons.Default.Send,
                     contentDescription = if (isGenerating) "Stop" else "Send",
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(24.dp)
                 )
             }
         }
@@ -173,9 +180,9 @@ fun TypingIndicator(
             
             Box(
                 modifier = Modifier
-                    .size(6.dp)
+                    .size(8.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = alpha))
+                    .background(Color(0xFF00E5FF).copy(alpha = alpha))
             )
         }
     }
