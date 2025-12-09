@@ -7,6 +7,7 @@ import com.localllm.app.data.model.AppTheme
 import com.localllm.app.data.model.GenerationConfig
 import com.localllm.app.data.model.StorageType
 import com.localllm.app.data.model.UserPreferences
+import com.localllm.app.data.model.WebSearchProvider
 import com.localllm.app.domain.usecase.GetStorageStatsUseCase
 import com.localllm.app.domain.usecase.StorageStats
 import com.localllm.app.inference.ModelManager
@@ -271,6 +272,24 @@ class SettingsViewModel @Inject constructor(
     fun updateGpuLayers(layers: Int) {
         viewModelScope.launch {
             preferencesDataStore.updateGpuLayers(layers)
+        }
+    }
+
+    /**
+     * Update Tavily API key for web search.
+     */
+    fun updateTavilyApiKey(apiKey: String) {
+        viewModelScope.launch {
+            preferencesDataStore.updateTavilyApiKey(apiKey)
+        }
+    }
+
+    /**
+     * Update web search provider preference.
+     */
+    fun updateWebSearchProvider(provider: WebSearchProvider) {
+        viewModelScope.launch {
+            preferencesDataStore.updateWebSearchProvider(provider)
         }
     }
 

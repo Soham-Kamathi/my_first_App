@@ -2,6 +2,7 @@ package com.localllm.app.ui.screen
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -9,10 +10,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.localllm.app.data.model.AppTheme
 import com.localllm.app.data.model.GenerationConfig
+import com.localllm.app.data.model.WebSearchProvider
 import com.localllm.app.ui.viewmodel.SettingsViewModel
 
 /**
@@ -125,6 +130,155 @@ fun SettingsScreen(
                     checked = userPreferences.webSearchEnabled,
                     onCheckedChange = { viewModel.updateWebSearch(it) }
                 )
+                
+                // Web Search Configuration (shown when enabled)
+                if (userPreferences.webSearchEnabled) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    // Search Provider Selection
+                    var providerExpanded by remember { mutableStateOf(false) }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Language,
+                            contentDescription = null,
+                            modifier = Modifier.padding(end = 16.dp)
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Search Provider",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Text(
+                                text = when (userPreferences.webSearchProvider) {
+                                    WebSearchProvider.AUTO -> "Auto (Tavily if configured)"
+                                    WebSearchProvider.TAVILY -> "Tavily API"
+                                    WebSearchProvider.DUCKDUCKGO -> "DuckDuckGo"
+                                    WebSearchProvider.WIKIPEDIA -> "Wikipedia"
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        ExposedDropdownMenuBox(
+                            expanded = providerExpanded,
+                            onExpandedChange = { providerExpanded = !providerExpanded }
+                        ) {
+                            OutlinedTextField(
+                                value = userPreferences.webSearchProvider.name,
+                                onValueChange = {},
+                                readOnly = true,
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = providerExpanded) },
+                                modifier = Modifier
+                                    .menuAnchor()
+                                    .width(140.dp)
+                            )
+                            ExposedDropdownMenu(
+                                expanded = providerExpanded,
+                                onDismissRequest = { providerExpanded = false }
+                            ) {
+                                WebSearchProvider.entries.forEach { provider ->
+                                    DropdownMenuItem(
+                                        text = { Text(provider.name) },
+                                        onClick = {
+                                            viewModel.updateWebSearchProvider(provider)
+                                            providerExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Tavily API Key Input
+                    var showApiKey by remember { mutableStateOf(false) }
+                    var apiKeyText by remember(userPreferences.tavilyApiKey) { 
+                        mutableStateOf(userPreferences.tavilyApiKey) 
+                    }
+                    
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Key,
+                            contentDescription = null,
+                            modifier = Modifier.padding(end = 16.dp)
+                        )
+                        OutlinedTextField(
+                            value = apiKeyText,
+                            onValueChange = { 
+                                apiKeyText = it
+                                viewModel.updateTavilyApiKey(it)
+                            },
+                            label = { Text("Tavily API Key") },
+                            placeholder = { Text("tvly-...") },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
+                            visualTransformation = if (showApiKey) VisualTransformation.None else PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                            trailingIcon = {
+                                IconButton(onClick = { showApiKey = !showApiKey }) {
+                                    Icon(
+                                        imageVector = if (showApiKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                        contentDescription = if (showApiKey) "Hide" else "Show"
+                                    )
+                                }
+                            }
+                        )
+                    }
+                    
+                    // API Key help text
+                    Text(
+                        text = "Get your free API key at tavily.com",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(start = 56.dp, end = 16.dp, bottom = 8.dp)
+                    )
+                    
+                    // Status indicator
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Spacer(modifier = Modifier.width(40.dp))
+                        if (userPreferences.tavilyApiKey.isNotBlank()) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Tavily API configured",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Using DuckDuckGo fallback (no API key needed)",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
             }
             
             Divider(modifier = Modifier.padding(vertical = 8.dp))

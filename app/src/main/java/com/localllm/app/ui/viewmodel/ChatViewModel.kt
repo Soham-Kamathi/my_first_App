@@ -91,6 +91,16 @@ class ChatViewModel @Inject constructor(
         get() = _generationState.value is GenerationState.Generating
 
     /**
+     * Toggle web search for this chat session.
+     */
+    fun toggleWebSearch() {
+        viewModelScope.launch {
+            val currentValue = userPreferences.value.webSearchEnabled
+            preferencesDataStore.updateWebSearch(!currentValue)
+        }
+    }
+
+    /**
      * Create a new conversation and set it as current.
      */
     fun createNewConversation() {
@@ -177,16 +187,28 @@ class ChatViewModel @Inject constructor(
             var webSearchContext = ""
             if (preferences.webSearchEnabled && lastUserMessage.isNotBlank()) {
                 _isSearchingWeb.value = true
+                android.util.Log.d("ChatViewModel", "Web search enabled, searching for: $lastUserMessage")
                 try {
-                    val searchResponse = webSearchService.search(lastUserMessage)
-                    if (searchResponse.success && searchResponse.results.isNotEmpty()) {
+                    val searchResponse = webSearchService.search(
+                        query = lastUserMessage,
+                        tavilyApiKey = preferences.tavilyApiKey,
+                        provider = preferences.webSearchProvider
+                    )
+                    android.util.Log.d("ChatViewModel", "Web search result: success=${searchResponse.success}, provider=${searchResponse.provider}, results=${searchResponse.results.size}, error=${searchResponse.error}")
+                    if (searchResponse.success && (searchResponse.results.isNotEmpty() || searchResponse.abstractText != null)) {
                         webSearchContext = webSearchService.formatResultsForLLM(searchResponse)
                         _webSearchResults.value = webSearchContext
+                        android.util.Log.d("ChatViewModel", "Web search context length: ${webSearchContext.length}")
+                    } else if (!searchResponse.success) {
+                        android.util.Log.w("ChatViewModel", "Web search failed: ${searchResponse.error}")
                     }
                 } catch (e: Exception) {
                     // Web search failed, continue without it
+                    android.util.Log.e("ChatViewModel", "Web search exception: ${e.message}", e)
                 }
                 _isSearchingWeb.value = false
+            } else {
+                android.util.Log.d("ChatViewModel", "Web search skipped: enabled=${preferences.webSearchEnabled}, message=${lastUserMessage.take(50)}")
             }
 
             // Create placeholder assistant message

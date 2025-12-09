@@ -51,6 +51,7 @@ fun ChatScreen(
     val currentModel by viewModel.currentModel.collectAsState()
     val modelLoadingState by viewModel.modelLoadingState.collectAsState()
     val userPreferences by viewModel.userPreferences.collectAsState()
+    val isSearchingWeb by viewModel.isSearchingWeb.collectAsState()
     
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
@@ -90,6 +91,8 @@ fun ChatScreen(
             ChatInput(
                 enabled = viewModel.isModelLoaded && generationState !is GenerationState.Generating,
                 isGenerating = generationState is GenerationState.Generating,
+                webSearchEnabled = userPreferences.webSearchEnabled,
+                onToggleWebSearch = { viewModel.toggleWebSearch() },
                 onSendMessage = { text ->
                     if (viewModel.isModelLoaded) {
                         viewModel.sendMessage(text)
@@ -163,6 +166,30 @@ fun ChatScreen(
                                 tokensGenerated = state.tokensGenerated,
                                 tokensPerSecond = state.tokensPerSecond
                             )
+                        }
+                    }
+                    
+                    // Web search indicator
+                    if (isSearchingWeb) {
+                        item {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(16.dp),
+                                    strokeWidth = 2.dp
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Searching the web...",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
                         }
                     }
                 }

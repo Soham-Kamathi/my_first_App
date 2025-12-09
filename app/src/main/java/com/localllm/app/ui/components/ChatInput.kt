@@ -1,6 +1,7 @@
 package com.localllm.app.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -10,6 +11,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.TravelExplore
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,7 +31,9 @@ fun ChatInput(
     isGenerating: Boolean,
     onSendMessage: (String) -> Unit,
     onStopGeneration: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    webSearchEnabled: Boolean = false,
+    onToggleWebSearch: (() -> Unit)? = null
 ) {
     var text by remember { mutableStateOf("") }
     
@@ -45,8 +49,83 @@ fun ChatInput(
         modifier = modifier
             .fillMaxWidth()
             .background(backgroundGradient)
-            .padding(vertical = 16.dp, horizontal = 20.dp)
+            .padding(vertical = 12.dp, horizontal = 20.dp)
     ) {
+        // Web Search Toggle Row
+        if (onToggleWebSearch != null) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Web search toggle chip
+                val chipColor by animateColorAsState(
+                    targetValue = if (webSearchEnabled) Color(0xFF00E5FF).copy(alpha = 0.15f) 
+                                  else Color.Transparent,
+                    label = "chipColor"
+                )
+                val borderColor by animateColorAsState(
+                    targetValue = if (webSearchEnabled) Color(0xFF00E5FF) 
+                                  else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                    label = "borderColor"
+                )
+                val iconTint by animateColorAsState(
+                    targetValue = if (webSearchEnabled) Color(0xFF00E5FF) 
+                                  else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    label = "iconTint"
+                )
+                
+                Surface(
+                    onClick = onToggleWebSearch,
+                    modifier = Modifier.height(32.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    color = chipColor,
+                    border = ButtonDefaults.outlinedButtonBorder.copy(
+                        brush = Brush.linearGradient(listOf(borderColor, borderColor))
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.TravelExplore,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = iconTint
+                        )
+                        Text(
+                            text = "Web Search",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = if (webSearchEnabled) Color(0xFF00E5FF) 
+                                    else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        )
+                        if (webSearchEnabled) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp),
+                                tint = Color(0xFF00E5FF)
+                            )
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.weight(1f))
+                
+                // Status text when enabled
+                if (webSearchEnabled) {
+                    Text(
+                        text = "Search enabled",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color(0xFF00E5FF).copy(alpha = 0.7f)
+                    )
+                }
+            }
+        }
+        
         Row(
             verticalAlignment = Alignment.Bottom,
             modifier = Modifier.fillMaxWidth()

@@ -8,6 +8,7 @@ import com.localllm.app.data.model.AppTheme
 import com.localllm.app.data.model.GenerationConfig
 import com.localllm.app.data.model.StorageType
 import com.localllm.app.data.model.UserPreferences
+import com.localllm.app.data.model.WebSearchProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
@@ -47,6 +48,10 @@ class PreferencesDataStore @Inject constructor(
         // GPU/Hardware acceleration
         val GPU_ACCELERATION_ENABLED = booleanPreferencesKey("gpu_acceleration_enabled")
         val GPU_LAYERS = intPreferencesKey("gpu_layers")
+        
+        // Web Search API
+        val TAVILY_API_KEY = stringPreferencesKey("tavily_api_key")
+        val WEB_SEARCH_PROVIDER = stringPreferencesKey("web_search_provider")
         
         // Generation config
         val GEN_MAX_TOKENS = intPreferencesKey("gen_max_tokens")
@@ -107,7 +112,11 @@ class PreferencesDataStore @Inject constructor(
             gpuAccelerationEnabled = preferences[PreferencesKeys.GPU_ACCELERATION_ENABLED] ?: false,
             gpuLayers = preferences[PreferencesKeys.GPU_LAYERS] ?: 0,
             thinkingModeEnabled = preferences[PreferencesKeys.THINKING_MODE_ENABLED] ?: false,
-            webSearchEnabled = preferences[PreferencesKeys.WEB_SEARCH_ENABLED] ?: false
+            webSearchEnabled = preferences[PreferencesKeys.WEB_SEARCH_ENABLED] ?: false,
+            tavilyApiKey = preferences[PreferencesKeys.TAVILY_API_KEY] ?: "",
+            webSearchProvider = preferences[PreferencesKeys.WEB_SEARCH_PROVIDER]?.let {
+                try { WebSearchProvider.valueOf(it) } catch (e: Exception) { WebSearchProvider.AUTO }
+            } ?: WebSearchProvider.AUTO
         )
     }
 
@@ -213,6 +222,18 @@ class PreferencesDataStore @Inject constructor(
     suspend fun updateGpuLayers(layers: Int) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.GPU_LAYERS] = layers
+        }
+    }
+
+    suspend fun updateTavilyApiKey(apiKey: String) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.TAVILY_API_KEY] = apiKey
+        }
+    }
+
+    suspend fun updateWebSearchProvider(provider: WebSearchProvider) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.WEB_SEARCH_PROVIDER] = provider.name
         }
     }
 }
