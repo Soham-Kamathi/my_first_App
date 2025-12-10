@@ -1,5 +1,6 @@
 package com.localllm.app.ui.components
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,10 +18,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.localllm.app.data.model.ChatMessage
 import com.localllm.app.data.model.MessageRole
-import com.localllm.app.ui.theme.AssistantMessageBackground
-import com.localllm.app.ui.theme.AssistantMessageBackgroundDark
-import com.localllm.app.ui.theme.UserMessageBackground
-import com.localllm.app.ui.theme.UserMessageBackgroundDark
+
 
 /**
  * Message bubble component for displaying chat messages.
@@ -32,25 +30,32 @@ fun MessageBubble(
     onCopy: () -> Unit = {},
     onDelete: () -> Unit = {},
     onRegenerate: (() -> Unit)? = null,
-    modifier: Modifier = Modifier
+    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
 ) {
     val isUser = message.role == MessageRole.USER
     var showActions by remember { mutableStateOf(false) }
+    val isDarkTheme = MaterialTheme.colorScheme.background == Color(0xFF000000)
     
-    // Enhanced gradient backgrounds
+    // Enhanced gradient backgrounds - theme-aware
     val userGradient = Brush.linearGradient(
-        colors = listOf(
-            Color(0xFF00E5FF),
-            Color(0xFF00B8D4)
-        )
+        colors = if (isDarkTheme) {
+            listOf(
+                Color(0xFF00E5FF),
+                Color(0xFF00B8D4)
+            )
+        } else {
+            listOf(
+                MaterialTheme.colorScheme.primary,
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
+            )
+        }
     )
     
-    val assistantGradient = Brush.linearGradient(
-        colors = listOf(
-            Color(0xFF1E1E1E),
-            Color(0xFF2A2A2A)
-        )
-    )
+    val assistantSurfaceColor = if (isDarkTheme) {
+        Color(0xFF1E1E1E)
+    } else {
+        MaterialTheme.colorScheme.surfaceVariant
+    }
     
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -71,7 +76,7 @@ fun MessageBubble(
             color = if (isUser) {
                 Color.Transparent
             } else {
-                Color(0xFF1E1E1E)
+                assistantSurfaceColor
             },
             onClick = { showActions = !showActions }
         ) {
@@ -92,13 +97,13 @@ fun MessageBubble(
                                 modifier = Modifier
                                     .size(8.dp)
                                     .clip(androidx.compose.foundation.shape.CircleShape)
-                                    .background(Color(0xFF00E5FF))
+                                    .background(MaterialTheme.colorScheme.primary)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = "Assistant",
                                 style = MaterialTheme.typography.labelMedium,
-                                color = Color(0xFF00E5FF),
+                                color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.padding(bottom = 6.dp)
                             )
                         }
@@ -111,9 +116,9 @@ fun MessageBubble(
                             lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.3f
                         ),
                         color = if (isUser) {
-                            Color.Black
+                            if (isDarkTheme) Color.Black else Color.White
                         } else {
-                            Color.White
+                            MaterialTheme.colorScheme.onSurface
                         }
                     )
                     
@@ -124,20 +129,20 @@ fun MessageBubble(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(Color(0xFF00E5FF).copy(alpha = 0.15f))
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
                                 .padding(horizontal = 10.dp, vertical = 6.dp)
                         ) {
                             Icon(
                                 Icons.Outlined.Speed,
                                 contentDescription = null,
                                 modifier = Modifier.size(14.dp),
-                                tint = Color(0xFF00E5FF)
+                                tint = MaterialTheme.colorScheme.primary
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = "${message.tokensGenerated} tokens • ${String.format("%.1f", message.tokensPerSecond())} t/s",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = Color(0xFF00E5FF)
+                                color = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
@@ -156,7 +161,7 @@ fun MessageBubble(
                     onClick = onCopy,
                     modifier = Modifier.size(36.dp),
                     shape = androidx.compose.foundation.shape.CircleShape,
-                    color = Color(0xFF1E1E1E),
+                    color = MaterialTheme.colorScheme.surfaceVariant,
                     shadowElevation = 2.dp
                 ) {
                     Box(contentAlignment = Alignment.Center) {
@@ -164,7 +169,7 @@ fun MessageBubble(
                             Icons.Default.ContentCopy,
                             contentDescription = "Copy",
                             modifier = Modifier.size(18.dp),
-                            tint = Color(0xFF00E5FF)
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
@@ -175,7 +180,7 @@ fun MessageBubble(
                         onClick = onRegenerate,
                         modifier = Modifier.size(36.dp),
                         shape = androidx.compose.foundation.shape.CircleShape,
-                        color = Color(0xFF1E1E1E),
+                        color = MaterialTheme.colorScheme.surfaceVariant,
                         shadowElevation = 2.dp
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -183,7 +188,7 @@ fun MessageBubble(
                                 Icons.Default.Refresh,
                                 contentDescription = "Regenerate",
                                 modifier = Modifier.size(18.dp),
-                                tint = Color(0xFF00E5FF)
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
@@ -194,7 +199,7 @@ fun MessageBubble(
                     onClick = onDelete,
                     modifier = Modifier.size(36.dp),
                     shape = androidx.compose.foundation.shape.CircleShape,
-                    color = Color(0xFF1E1E1E),
+                    color = MaterialTheme.colorScheme.surfaceVariant,
                     shadowElevation = 2.dp
                 ) {
                     Box(contentAlignment = Alignment.Center) {
@@ -202,7 +207,7 @@ fun MessageBubble(
                             Icons.Default.Delete,
                             contentDescription = "Delete",
                             modifier = Modifier.size(18.dp),
-                            tint = Color(0xFFFF1744)
+                            tint = MaterialTheme.colorScheme.error
                         )
                     }
                 }

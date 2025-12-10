@@ -47,11 +47,11 @@ fun ModelCard(
         DownloadState.NotStarted
     }
     
-    // Enhanced card with gradient border
+    // Enhanced card with gradient border - theme-aware
     val cardGradient = Brush.linearGradient(
         colors = listOf(
-            Color(0xFF1E1E1E),
-            Color(0xFF252525)
+            MaterialTheme.colorScheme.surfaceVariant,
+            MaterialTheme.colorScheme.surface
         )
     )
     
@@ -60,7 +60,7 @@ fun ModelCard(
             .fillMaxWidth()
             .animateContentSize(),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF1A1A1A)
+            containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
@@ -89,8 +89,8 @@ fun ModelCard(
                                 .background(
                                     Brush.radialGradient(
                                         colors = listOf(
-                                            Color(0xFF00E5FF).copy(alpha = 0.2f),
-                                            Color(0xFF00E5FF).copy(alpha = 0.05f)
+                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
                                         )
                                     )
                                 ),
@@ -120,7 +120,7 @@ fun ModelCard(
                                     style = MaterialTheme.typography.titleMedium.copy(
                                         fontWeight = FontWeight.SemiBold
                                     ),
-                                    color = Color.White,
+                                    color = MaterialTheme.colorScheme.onSurface,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
@@ -128,7 +128,7 @@ fun ModelCard(
                                     Spacer(modifier = Modifier.width(10.dp))
                                     Surface(
                                         shape = MaterialTheme.shapes.small,
-                                        color = Color(0xFF00E5FF).copy(alpha = 0.2f)
+                                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
                                     ) {
                                         Row(
                                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -138,7 +138,7 @@ fun ModelCard(
                                                 modifier = Modifier
                                                     .size(6.dp)
                                                     .clip(androidx.compose.foundation.shape.CircleShape)
-                                                    .background(Color(0xFF00E5FF))
+                                                    .background(MaterialTheme.colorScheme.primary)
                                             )
                                             Spacer(modifier = Modifier.width(4.dp))
                                             Text(
@@ -146,7 +146,7 @@ fun ModelCard(
                                                 style = MaterialTheme.typography.labelSmall.copy(
                                                     fontWeight = FontWeight.SemiBold
                                                 ),
-                                                color = Color(0xFF00E5FF)
+                                                color = MaterialTheme.colorScheme.primary
                                             )
                                         }
                                     }
@@ -160,7 +160,7 @@ fun ModelCard(
                                 Text(
                                     text = "by $author",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = Color(0xFF9E9E9E)
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                                 )
                             }
                             
@@ -169,7 +169,7 @@ fun ModelCard(
                             Text(
                                 text = "${model.parameterCount} • ${model.quantization}",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = Color(0xFFB0B0B0)
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -178,7 +178,7 @@ fun ModelCard(
                     if (!canRun && !model.isDownloaded) {
                         Surface(
                             shape = MaterialTheme.shapes.small,
-                            color = Color(0xFFFF1744).copy(alpha = 0.2f)
+                            color = MaterialTheme.colorScheme.error.copy(alpha = 0.2f)
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
@@ -188,7 +188,7 @@ fun ModelCard(
                                     Icons.Default.Warning,
                                     contentDescription = null,
                                     modifier = Modifier.size(16.dp),
-                                    tint = Color(0xFFFF1744)
+                                    tint = MaterialTheme.colorScheme.error
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
@@ -196,7 +196,7 @@ fun ModelCard(
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontWeight = FontWeight.SemiBold
                                     ),
-                                    color = Color(0xFFFF1744)
+                                    color = MaterialTheme.colorScheme.error
                                 )
                             }
                         }
@@ -209,7 +209,7 @@ fun ModelCard(
                 Text(
                     text = model.description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFFB0B0B0),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -228,13 +228,13 @@ fun ModelCard(
                                     Icons.Default.Download,
                                     contentDescription = null,
                                     modifier = Modifier.size(14.dp),
-                                    tint = Color(0xFF9E9E9E)
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = formatNumber(model.downloads),
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = Color(0xFF9E9E9E)
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                                 )
                             }
                         }
@@ -244,13 +244,13 @@ fun ModelCard(
                                     Icons.Default.Favorite,
                                     contentDescription = null,
                                     modifier = Modifier.size(14.dp),
-                                    tint = Color(0xFFFF1744)
+                                    tint = MaterialTheme.colorScheme.error
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = formatNumber(model.likes),
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = Color(0xFF9E9E9E)
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                                 )
                             }
                         }
@@ -286,13 +286,13 @@ fun ModelCard(
                         model.tags.take(3).forEach { tag ->
                             Surface(
                                 shape = MaterialTheme.shapes.small,
-                                color = Color(0xFF00E5FF).copy(alpha = 0.15f)
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
                             ) {
                                 Text(
                                     text = tag,
                                     style = MaterialTheme.typography.labelSmall,
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                    color = Color(0xFF00E5FF)
+                                    color = MaterialTheme.colorScheme.primary
                                 )
                             }
                         }
@@ -311,8 +311,8 @@ fun ModelCard(
                                     .fillMaxWidth()
                                     .height(6.dp)
                                     .clip(MaterialTheme.shapes.small),
-                                color = Color(0xFF00E5FF),
-                                trackColor = Color(0xFF1E1E1E)
+                                color = MaterialTheme.colorScheme.primary,
+                                trackColor = MaterialTheme.colorScheme.surfaceVariant
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Row(
@@ -322,13 +322,13 @@ fun ModelCard(
                                 Text(
                                     text = effectiveDownloadState.formattedProgress(),
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = Color(0xFF00E5FF),
+                                    color = MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.SemiBold
                                 )
                                 Text(
                                     text = "${effectiveDownloadState.formattedSpeed()} • ${effectiveDownloadState.estimatedTimeRemaining()}",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = Color(0xFFB0B0B0)
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                             Spacer(modifier = Modifier.height(12.dp))
@@ -336,7 +336,7 @@ fun ModelCard(
                                 onClick = onCancelDownload,
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = Color(0xFFFF1744)
+                                    contentColor = MaterialTheme.colorScheme.error
                                 )
                             ) {
                                 Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(20.dp))
@@ -401,7 +401,7 @@ fun ModelCard(
                                     onClick = onUnload,
                                     modifier = Modifier.weight(1f),
                                     colors = ButtonDefaults.outlinedButtonColors(
-                                        contentColor = Color(0xFF00E5FF)
+                                        contentColor = MaterialTheme.colorScheme.primary
                                     )
                                 ) {
                                     Icon(Icons.Default.Eject, contentDescription = null, modifier = Modifier.size(20.dp))
@@ -414,15 +414,15 @@ fun ModelCard(
                                     enabled = canRun && !isLoading,
                                     modifier = Modifier.weight(1f),
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = Color(0xFF00E5FF),
-                                        contentColor = Color.Black
+                                        containerColor = MaterialTheme.colorScheme.primary,
+                                        contentColor = MaterialTheme.colorScheme.onPrimary
                                     )
                                 ) {
                                     if (isLoading) {
                                         CircularProgressIndicator(
                                             modifier = Modifier.size(18.dp),
                                             strokeWidth = 2.dp,
-                                            color = Color.Black
+                                            color = MaterialTheme.colorScheme.onPrimary
                                         )
                                     } else {
                                         Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(20.dp))
@@ -442,7 +442,7 @@ fun ModelCard(
                                 Icon(
                                     Icons.Default.Delete,
                                     contentDescription = "Delete",
-                                    tint = Color(0xFFFF1744),
+                                    tint = MaterialTheme.colorScheme.error,
                                     modifier = Modifier.size(22.dp)
                                 )
                             }
@@ -473,8 +473,8 @@ fun ModelCard(
                             onClick = onDownload,
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF00E5FF),
-                                contentColor = Color.Black
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
                             )
                         ) {
                             Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(20.dp))
@@ -496,7 +496,7 @@ private fun EnhancedModelStat(
 ) {
     Surface(
         shape = MaterialTheme.shapes.small,
-        color = Color(0xFF00E5FF).copy(alpha = 0.15f)
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
@@ -506,7 +506,7 @@ private fun EnhancedModelStat(
                 icon,
                 contentDescription = null,
                 modifier = Modifier.size(16.dp),
-                tint = Color(0xFF00E5FF)
+                tint = MaterialTheme.colorScheme.primary
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
@@ -514,7 +514,7 @@ private fun EnhancedModelStat(
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontWeight = FontWeight.SemiBold
                 ),
-                color = Color(0xFF00E5FF)
+                color = MaterialTheme.colorScheme.primary
             )
         }
     }

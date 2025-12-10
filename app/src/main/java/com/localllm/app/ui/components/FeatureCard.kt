@@ -164,7 +164,7 @@ private fun CollapsedCardContent(
                     modifier = Modifier
                         .size(56.dp)
                         .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.25f)),
+                        .background(Color.White.copy(alpha = 0.3f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -179,7 +179,7 @@ private fun CollapsedCardContent(
                 badge?.let {
                     Surface(
                         shape = RoundedCornerShape(12.dp),
-                        color = Color.White.copy(alpha = 0.3f)
+                        color = Color.White.copy(alpha = 0.35f)
                     ) {
                         Text(
                             text = it,
@@ -233,14 +233,14 @@ private fun CollapsedCardContent(
                 .align(Alignment.BottomEnd)
                 .size(32.dp)
                 .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.2f)),
+                .background(Color.White.copy(alpha = 0.25f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Default.ExpandMore,
                 contentDescription = "Expand",
                 modifier = Modifier.size(20.dp),
-                tint = Color.White.copy(alpha = 0.7f)
+                tint = Color.White.copy(alpha = 0.8f)
             )
         }
     }
@@ -283,7 +283,7 @@ private fun ExpandedCardContent(
                         modifier = Modifier
                             .size(40.dp)
                             .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.25f)),
+                            .background(Color.White.copy(alpha = 0.3f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -349,7 +349,7 @@ private fun ExpandedCardContent(
                     .fillMaxWidth()
                     .height(60.dp),
                 shape = RoundedCornerShape(16.dp),
-                color = Color.White.copy(alpha = 0.2f)
+                color = Color.White.copy(alpha = 0.25f)
             ) {
                 Box(
                     modifier = Modifier
@@ -380,7 +380,7 @@ private fun ExpandedCardContent(
                         badge?.let {
                             Surface(
                                 shape = RoundedCornerShape(8.dp),
-                                color = Color.White.copy(alpha = 0.3f)
+                                color = Color.White.copy(alpha = 0.35f)
                             ) {
                                 Text(
                                     text = it,

@@ -117,8 +117,8 @@ fun ChatScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(3.dp),
-                    color = Color(0xFF00E5FF),
-                    trackColor = Color(0xFF1E1E1E)
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant
                 )
             }
             
@@ -241,13 +241,13 @@ private fun ChatTopBar(
                     ),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 if (modelLoadingState is ModelLoadingState.Loading) {
                     Text(
                         text = "Loading...",
                         style = MaterialTheme.typography.labelSmall,
-                        color = Color(0xFF00E5FF)
+                        color = MaterialTheme.colorScheme.primary
                     )
                 } else if (isModelLoaded) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -255,13 +255,13 @@ private fun ChatTopBar(
                             modifier = Modifier
                                 .size(6.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFF00E5FF))
+                                .background(MaterialTheme.colorScheme.primary)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "Ready",
                             style = MaterialTheme.typography.labelSmall,
-                            color = Color(0xFFB0B0B0)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -310,11 +310,11 @@ private fun ChatTopBar(
 private fun NoModelBanner(
     onSelectModel: () -> Unit
 ) {
-    // Enhanced gradient banner
+    // Enhanced gradient banner - theme-aware
     val bannerGradient = Brush.linearGradient(
         colors = listOf(
-            Color(0xFFFF1744).copy(alpha = 0.15f),
-            Color(0xFFE91E63).copy(alpha = 0.1f)
+            MaterialTheme.colorScheme.error.copy(alpha = 0.15f),
+            MaterialTheme.colorScheme.error.copy(alpha = 0.08f)
         )
     )
     
@@ -334,13 +334,13 @@ private fun NoModelBanner(
                     modifier = Modifier
                         .size(48.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFFFF1744).copy(alpha = 0.2f)),
+                        .background(MaterialTheme.colorScheme.error.copy(alpha = 0.2f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         Icons.Default.Warning,
                         contentDescription = null,
-                        tint = Color(0xFFFF1744),
+                        tint = MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(28.dp)
                     )
                 }
@@ -351,20 +351,20 @@ private fun NoModelBanner(
                         style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.SemiBold
                         ),
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "Select a model to start chatting",
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFFB0B0B0)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 Button(
                     onClick = onSelectModel,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFFF1744),
-                        contentColor = Color.White
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError
                     )
                 ) {
                     Text("Select", fontWeight = FontWeight.SemiBold)

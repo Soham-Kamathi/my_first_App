@@ -25,11 +25,11 @@ fun DeviceCapabilityCard(
 ) {
     var expanded by remember { mutableStateOf(false) }
     
-    // Enhanced gradient background
+    // Enhanced gradient background - theme-aware
     val cardGradient = Brush.linearGradient(
         colors = listOf(
-            Color(0xFF00E5FF).copy(alpha = 0.15f),
-            Color(0xFF00BCD4).copy(alpha = 0.1f)
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
         )
     )
     
@@ -54,13 +54,13 @@ fun DeviceCapabilityCard(
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(MaterialTheme.shapes.small)
-                                .background(Color(0xFF00E5FF).copy(alpha = 0.2f)),
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 Icons.Default.PhoneAndroid,
                                 contentDescription = null,
-                                tint = Color(0xFF00E5FF),
+                                tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(24.dp)
                             )
                         }
@@ -71,13 +71,13 @@ fun DeviceCapabilityCard(
                                 style = MaterialTheme.typography.titleSmall.copy(
                                     fontWeight = FontWeight.SemiBold
                                 ),
-                                color = Color.White
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = "${deviceInfo.availableRamMb}MB available of ${deviceInfo.totalRamMb}MB",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFFB0B0B0)
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -86,14 +86,14 @@ fun DeviceCapabilityCard(
                         Icon(
                             if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                             contentDescription = if (expanded) "Collapse" else "Expand",
-                            tint = Color(0xFF00E5FF)
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
                 
                 if (expanded) {
                     Spacer(modifier = Modifier.height(16.dp))
-                    Divider(color = Color(0xFF00E5FF).copy(alpha = 0.2f))
+                    Divider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
                     Spacer(modifier = Modifier.height(16.dp))
                     
                     // Enhanced CPU Info
@@ -146,7 +146,7 @@ fun DeviceCapabilityCard(
                     if (recommendedSizes.isNotEmpty()) {
                         Surface(
                             shape = MaterialTheme.shapes.small,
-                            color = Color(0xFF00E5FF).copy(alpha = 0.2f)
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
                         ) {
                             Row(
                                 modifier = Modifier.padding(12.dp),
@@ -155,7 +155,7 @@ fun DeviceCapabilityCard(
                                 Icon(
                                     Icons.Default.Lightbulb,
                                     contentDescription = null,
-                                    tint = Color(0xFF00E5FF),
+                                    tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(18.dp)
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
@@ -164,7 +164,7 @@ fun DeviceCapabilityCard(
                                     style = MaterialTheme.typography.bodySmall.copy(
                                         fontWeight = FontWeight.Medium
                                     ),
-                                    color = Color(0xFF00E5FF)
+                                    color = MaterialTheme.colorScheme.primary
                                 )
                             }
                         }
@@ -192,7 +192,7 @@ private fun EnhancedDeviceInfoRow(
             icon,
             contentDescription = null,
             modifier = Modifier.size(20.dp),
-            tint = Color(0xFF00E5FF)
+            tint = MaterialTheme.colorScheme.primary
         )
         Spacer(modifier = Modifier.width(12.dp))
         Text(
@@ -201,12 +201,12 @@ private fun EnhancedDeviceInfoRow(
                 fontWeight = FontWeight.Medium
             ),
             modifier = Modifier.width(70.dp),
-            color = Color.White
+            color = MaterialTheme.colorScheme.onSurface
         )
         Text(
             text = value,
             style = MaterialTheme.typography.bodySmall,
-            color = Color(0xFFB0B0B0)
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
@@ -220,9 +220,9 @@ private fun EnhancedFeatureChip(
     Surface(
         shape = MaterialTheme.shapes.small,
         color = if (supported) {
-            Color(0xFF00E5FF).copy(alpha = 0.2f)
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
         } else {
-            Color(0xFF1E1E1E)
+            MaterialTheme.colorScheme.surfaceVariant
         }
     ) {
         Row(
@@ -234,9 +234,9 @@ private fun EnhancedFeatureChip(
                 contentDescription = null,
                 modifier = Modifier.size(14.dp),
                 tint = if (supported) {
-                    Color(0xFF00E5FF)
+                    MaterialTheme.colorScheme.primary
                 } else {
-                    Color(0xFF666666)
+                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                 }
             )
             Spacer(modifier = Modifier.width(6.dp))
@@ -245,7 +245,7 @@ private fun EnhancedFeatureChip(
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontWeight = FontWeight.SemiBold
                 ),
-                color = if (supported) Color(0xFF00E5FF) else Color(0xFF666666)
+                color = if (supported) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
             )
         }
     }

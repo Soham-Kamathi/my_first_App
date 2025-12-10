@@ -58,7 +58,7 @@ fun ModelLibraryScreen(
                     Text(
                         "Model Library",
                         fontWeight = FontWeight.SemiBold,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onSurface
                     ) 
                 },
                 navigationIcon = {
@@ -66,7 +66,7 @@ fun ModelLibraryScreen(
                         Icon(
                             Icons.Default.ArrowBack, 
                             contentDescription = "Back",
-                            tint = Color.White
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 },
@@ -79,19 +79,19 @@ fun ModelLibraryScreen(
                             CircularProgressIndicator(
                                 modifier = Modifier.size(24.dp),
                                 strokeWidth = 2.dp,
-                                color = Color(0xFF00E5FF)
+                                color = MaterialTheme.colorScheme.primary
                             )
                         } else {
                             Icon(
                                 Icons.Default.Refresh, 
                                 contentDescription = "Refresh",
-                                tint = Color(0xFF00E5FF)
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF000000)
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
             )
         }
@@ -113,7 +113,7 @@ fun ModelLibraryScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 4.dp),
-                    color = Color(0xFF00E5FF).copy(alpha = 0.15f),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
                     shape = MaterialTheme.shapes.small
                 ) {
                     Row(
@@ -125,14 +125,14 @@ fun ModelLibraryScreen(
                             style = MaterialTheme.typography.bodySmall.copy(
                                 fontWeight = FontWeight.Medium
                             ),
-                            color = Color.White
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = stats.formattedSize(),
                             style = MaterialTheme.typography.bodySmall.copy(
                                 fontWeight = FontWeight.SemiBold
                             ),
-                            color = Color(0xFF00E5FF)
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
@@ -143,13 +143,13 @@ fun ModelLibraryScreen(
                 selectedTabIndex = selectedTab.ordinal,
                 modifier = Modifier.padding(horizontal = 16.dp),
                 containerColor = Color.Transparent,
-                contentColor = Color(0xFF00E5FF),
+                contentColor = MaterialTheme.colorScheme.primary,
                 indicator = { tabPositions ->
                     TabRowDefaults.Indicator(
                         modifier = Modifier.tabIndicatorOffset(
                             tabPositions[selectedTab.ordinal]
                         ),
-                        color = Color(0xFF00E5FF),
+                        color = MaterialTheme.colorScheme.primary,
                         height = 3.dp
                     )
                 }
@@ -162,7 +162,7 @@ fun ModelLibraryScreen(
                         Text(
                             "Downloaded (${downloadedModels.size})",
                             fontWeight = if (selectedTab == ModelLibraryTab.DOWNLOADED) FontWeight.SemiBold else FontWeight.Normal,
-                            color = if (selectedTab == ModelLibraryTab.DOWNLOADED) Color(0xFF00E5FF) else Color(0xFFB0B0B0)
+                            color = if (selectedTab == ModelLibraryTab.DOWNLOADED) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                         ) 
                     }
                 )
@@ -173,7 +173,7 @@ fun ModelLibraryScreen(
                         Text(
                             "Available (${availableModels.size})",
                             fontWeight = if (selectedTab == ModelLibraryTab.AVAILABLE) FontWeight.SemiBold else FontWeight.Normal,
-                            color = if (selectedTab == ModelLibraryTab.AVAILABLE) Color(0xFF00E5FF) else Color(0xFFB0B0B0)
+                            color = if (selectedTab == ModelLibraryTab.AVAILABLE) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                         ) 
                     }
                 )
@@ -185,7 +185,7 @@ fun ModelLibraryScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
-                    color = Color(0xFFFF1744).copy(alpha = 0.15f),
+                    color = MaterialTheme.colorScheme.error.copy(alpha = 0.12f),
                     shape = MaterialTheme.shapes.medium
                 ) {
                     Row(
@@ -195,7 +195,7 @@ fun ModelLibraryScreen(
                         Icon(
                             Icons.Default.Error,
                             contentDescription = null,
-                            tint = Color(0xFFFF1744),
+                            tint = MaterialTheme.colorScheme.error,
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(12.dp))
@@ -203,13 +203,13 @@ fun ModelLibraryScreen(
                             text = error,
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.weight(1f),
-                            color = Color.White
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         IconButton(onClick = { viewModel.clearError() }) {
                             Icon(
                                 Icons.Default.Close, 
                                 contentDescription = "Dismiss",
-                                tint = Color(0xFFFF1744)
+                                tint = MaterialTheme.colorScheme.error
                             )
                         }
                     }
@@ -238,7 +238,7 @@ fun ModelLibraryScreen(
                                 .background(
                                     Brush.radialGradient(
                                         colors = listOf(
-                                            Color(0xFF00E5FF).copy(alpha = 0.2f),
+                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
                                             Color.Transparent
                                         )
                                     )
@@ -253,7 +253,7 @@ fun ModelLibraryScreen(
                                 },
                                 contentDescription = null,
                                 modifier = Modifier.size(48.dp),
-                                tint = Color(0xFF00E5FF)
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         }
                         Spacer(modifier = Modifier.height(24.dp))
@@ -266,7 +266,7 @@ fun ModelLibraryScreen(
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.SemiBold
                             ),
-                            color = Color.White
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
@@ -276,7 +276,7 @@ fun ModelLibraryScreen(
                                 "Pull to refresh the catalog"
                             },
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color(0xFFB0B0B0)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
