@@ -33,11 +33,11 @@ fun ChatInput(
 ) {
     var text by remember { mutableStateOf("") }
     
-    // Enhanced background with gradient
+    // Enhanced background with gradient - theme-aware
     val backgroundGradient = Brush.verticalGradient(
         colors = listOf(
-            Color(0xFF121212).copy(alpha = 0.98f),
-            Color(0xFF1A1A1A).copy(alpha = 0.98f)
+            MaterialTheme.colorScheme.surface.copy(alpha = 0.98f),
+            MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
         )
     )
     
@@ -68,11 +68,11 @@ fun ChatInput(
                 },
                 shape = RoundedCornerShape(28.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF00E5FF).copy(alpha = 0.6f),
+                    focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
                     unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                    focusedContainerColor = Color(0xFF1E1E1E),
-                    unfocusedContainerColor = Color(0xFF1A1A1A),
-                    cursorColor = Color(0xFF00E5FF)
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    cursorColor = MaterialTheme.colorScheme.primary
                 ),
                 keyboardOptions = KeyboardOptions(
                     imeAction = ImeAction.Send
@@ -108,15 +108,15 @@ fun ChatInput(
             
             // Enhanced send/stop button with gradient
             val containerColor = if (isGenerating) {
-                Color(0xFFFF1744) // Bright red for stop
+                MaterialTheme.colorScheme.error // Error color for stop
             } else {
-                Color(0xFF00E5FF) // Cyan for send
+                MaterialTheme.colorScheme.primary // Primary for send
             }
             
             val contentColor = if (isGenerating) {
-                Color.White
+                MaterialTheme.colorScheme.onError
             } else {
-                Color.Black
+                MaterialTheme.colorScheme.onPrimary
             }
             
             FilledIconButton(
@@ -133,7 +133,7 @@ fun ChatInput(
                 colors = IconButtonDefaults.filledIconButtonColors(
                     containerColor = containerColor,
                     contentColor = contentColor,
-                    disabledContainerColor = Color(0xFF1E1E1E),
+                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                     disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
                 )
             ) {
@@ -182,7 +182,7 @@ fun TypingIndicator(
                 modifier = Modifier
                     .size(8.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFF00E5FF).copy(alpha = alpha))
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = alpha))
             )
         }
     }

@@ -32,7 +32,7 @@ private val TertiaryLight = Color(0xFF00ACC1) // Cyan 600
 private val TertiaryDark = Color(0xFF00E5FF)  // Cyan A400
 
 // Backgrounds - Deep, rich blacks and dark surfaces
-private val BackgroundLight = Color(0xFFF5F5F5) // Very light grey
+private val BackgroundLight = Color(0xFFFAFAFA) // Very light grey - better for light mode
 private val BackgroundDark = Color(0xFF000000)  // True black for OLED
 private val SurfaceLight = Color(0xFFFFFFFF)
 private val SurfaceDark = Color(0xFF121212)     // Dark surface (Material Design standard)
@@ -40,15 +40,7 @@ private val SurfaceVariantLight = Color(0xFFECEFF1) // Blue Grey 50
 private val SurfaceVariantDark = Color(0xFF1E1E1E)  // Slightly lighter than surface
 
 // Container colors for cards and elevated surfaces
-private val SurfaceContainerDark = Color(0xFF1A1A1A)
-private val SurfaceContainerHighDark = Color(0xFF242424)
-private val SurfaceContainerHighestDark = Color(0xFF2C2C2C)
 
-// Message Colors
-val UserMessageBackground = Color(0xFF1976D2) // Blue 700
-val UserMessageBackgroundDark = Color(0xFF1E3A5F) // Dark blue with subtle cyan tint
-val AssistantMessageBackground = Color(0xFFF5F5F5)
-val AssistantMessageBackgroundDark = Color(0xFF1E1E1E) // Dark grey
 
 // Error colors
 private val ErrorLight = Color(0xFFD32F2F) // Red 700
@@ -88,6 +80,7 @@ private val DarkColorScheme = darkColorScheme(
     onSurfaceVariant = Color(0xFFBDBDBD), // Grey 400 - softer than white
     
     // Surface containers (for elevated cards)
+
 
     
     // Outline & other
@@ -132,6 +125,9 @@ private val LightColorScheme = lightColorScheme(
     onSurface = Color(0xFF1A1A1A),
     surfaceVariant = SurfaceVariantLight,
     onSurfaceVariant = Color(0xFF455A64), // Blue Grey 700
+    
+    // Surface containers (for elevated cards)
+
     
     // Outline & other
     outline = Color(0xFF90A4AE), // Blue Grey 300

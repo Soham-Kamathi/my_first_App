@@ -64,8 +64,8 @@ fun LocalLLMBottomNavBar(navController: NavHostController) {
     val currentDestination = navBackStackEntry?.destination
     
     NavigationBar(
-        containerColor = Color(0xFF1E1E1E), // Deep dark grey/near-black
-        contentColor = Color.Gray
+        containerColor = MaterialTheme.colorScheme.surface,
+        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
     ) {
         screens.forEach { screen ->
             AddItem(
@@ -117,11 +117,11 @@ private fun RowScope.AddItem(
             }
         },
         colors = NavigationBarItemDefaults.colors(
-            selectedIconColor = Color(0xFF000000), // Dark/Black when active
-            selectedTextColor = Color(0xFF00C8C8), // Bright cyan text when active
-            unselectedIconColor = Color.Gray,
-            unselectedTextColor = Color.Gray,
-            indicatorColor = Color(0xFF00C8C8).copy(alpha = 0.15f) // Cyan indicator background
+            selectedIconColor = MaterialTheme.colorScheme.onPrimary,
+            selectedTextColor = MaterialTheme.colorScheme.primary,
+            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+            indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
         )
     )
 }
