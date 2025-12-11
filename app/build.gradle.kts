@@ -38,6 +38,8 @@ android {
                     "-DANDROID_STL=c++_shared",
                     "-DCMAKE_BUILD_TYPE=Release",
                     "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
+                    // Uncomment the line below to enable Vulkan GPU acceleration:
+                    // "-DLOCALLLM_ENABLE_VULKAN=ON"
                 )
                 // Add linker flags for 16KB page alignment (Android 15+ compatibility)
                 cppFlags += "-fPIC"
@@ -152,6 +154,9 @@ dependencies {
     
     // PDF parsing for Document Chat
     implementation("com.tom-roush:pdfbox-android:2.0.27.0")
+    
+    // ONNX Runtime for BGE embeddings (RAG)
+    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.17.0")
     
     // Markdown rendering for code highlighting
     implementation("io.noties.markwon:core:4.6.2")

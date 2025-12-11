@@ -34,7 +34,11 @@ data class ModelInfo(
     val downloads: Int = 0,
     val likes: Int = 0,
     val pipelineTag: String? = null,
-    val lastModified: String? = null
+    val lastModified: String? = null,
+    val supportsVision: Boolean = false, // Whether model supports image input (LLaVA, moondream, etc.)
+    val visionProjectorUrl: String? = null, // URL for vision projector file (mmproj) if separate
+    val modelType: String = "text-generation", // Model type: text-generation, audio-transcription, etc.
+    val isWhisper: Boolean = false // Whether this is a Whisper audio transcription model
 ) {
     /**
      * Returns the file size formatted as a human-readable string.
@@ -78,6 +82,12 @@ object PromptTemplate {
     const val COHERE = "cohere"           // Cohere Aya
     const val STARCODER = "starcoder"     // StarCoder models
     const val RAW = "raw"                 // Raw text
+    
+    // Vision model templates
+    const val LLAVA = "llava"             // LLaVA format with image tokens
+    const val MOONDREAM = "moondream"     // Moondream vision format
+    const val MINICPM_V = "minicpm-v"     // MiniCPM-V format
+    const val SMOLVLM = "smolvlm"         // SmolVLM format
 }
 
 /**

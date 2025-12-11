@@ -20,6 +20,10 @@
 
 #include "llama.h"
 
+#ifdef GGML_USE_VULKAN
+#include "ggml-vulkan.h"
+#endif
+
 #define LOG_TAG "LlamaJNI"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
@@ -666,6 +670,52 @@ Java_com_localllm_app_inference_LlamaAndroid_getThreadCountNative(JNIEnv *env, j
     return std::thread::hardware_concurrency();
 }
 
+// Check if Vulkan is available
+JNIEXPORT jboolean JNICALL
+Java_com_localllm_app_inference_LlamaAndroid_isVulkanAvailableNative(JNIEnv *env, jobject thiz) {
+#ifdef GGML_USE_VULKAN
+    try {
+        // Check if Vulkan backend is available
+        int device_count = ggml_backend_vk_get_device_count();
+        return device_count > 0 ? JNI_TRUE : JNI_FALSE;
+    } catch (...) {
+        return JNI_FALSE;
+    }
+#else
+    return JNI_FALSE;
+#endif
+}
+
+// Get Vulkan device count
+JNIEXPORT jint JNICALL
+Java_com_localllm_app_inference_LlamaAndroid_getVulkanDeviceCountNative(JNIEnv *env, jobject thiz) {
+#ifdef GGML_USE_VULKAN
+    try {
+        return ggml_backend_vk_get_device_count();
+    } catch (...) {
+        return 0;
+    }
+#else
+    return 0;
+#endif
+}
+
+// Get Vulkan device name
+JNIEXPORT jstring JNICALL
+Java_com_localllm_app_inference_LlamaAndroid_getVulkanDeviceNameNative(JNIEnv *env, jobject thiz, jint device_index) {
+#ifdef GGML_USE_VULKAN
+    try {
+        char description[256];
+        ggml_backend_vk_get_device_description(device_index, description, sizeof(description));
+        return string_to_jstring(env, description);
+    } catch (...) {
+        return string_to_jstring(env, "Unknown Device");
+    }
+#else
+    return string_to_jstring(env, "Vulkan not available");
+#endif
+}
+
 // System info
 JNIEXPORT jstring JNICALL
 Java_com_localllm_app_inference_LlamaAndroid_getSystemInfoNative(JNIEnv *env, jobject thiz) {
@@ -677,3 +727,4 @@ Java_com_localllm_app_inference_LlamaAndroid_getSystemInfoNative(JNIEnv *env, jo
 }
 
 } // extern "C"
+

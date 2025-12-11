@@ -8,10 +8,18 @@ import com.localllm.app.data.repository.ModelRepository
 import com.localllm.app.inference.ModelLoadingState
 import com.localllm.app.inference.ModelManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -44,8 +52,52 @@ class HomeViewModel @Inject constructor(
     private val _recentConversations = MutableStateFlow<List<RecentConversation>>(emptyList())
     val recentConversations: StateFlow<List<RecentConversation>> = _recentConversations.asStateFlow()
 
+    // Search functionality
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    private val _isSearchActive = MutableStateFlow(false)
+    val isSearchActive: StateFlow<Boolean> = _isSearchActive.asStateFlow()
+
+    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
+    val searchResults: StateFlow<List<RecentConversation>> = _searchQuery
+        .debounce(300)
+        .flatMapLatest { query ->
+            if (query.isBlank()) {
+                flowOf(emptyList())
+            } else {
+                conversationRepository.searchConversations(query).map { conversations ->
+                    conversations.map { conversation ->
+                        // Get last message for preview
+                        val messages = conversationRepository.getMessagesForConversationSync(conversation.id)
+                        val lastMessage = messages.lastOrNull()?.content ?: "No messages"
+                        
+                        RecentConversation(
+                            id = conversation.id,
+                            title = conversation.title,
+                            lastMessage = lastMessage.take(100),
+                            timeAgo = getTimeAgo(conversation.updatedAt),
+                            timestamp = conversation.updatedAt
+                        )
+                    }
+                }
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     init {
         loadRecentConversations()
+    }
+
+    fun onSearchQueryChange(query: String) {
+        _searchQuery.value = query
+    }
+
+    fun toggleSearch(active: Boolean) {
+        _isSearchActive.value = active
+        if (!active) {
+            _searchQuery.value = ""
+        }
     }
 
     private fun loadRecentConversations() {

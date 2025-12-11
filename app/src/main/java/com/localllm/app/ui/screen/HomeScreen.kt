@@ -71,11 +71,11 @@ fun HomeScreen(
     onNavigateToPromptLab: () -> Unit,
     onNavigateToAskImage: () -> Unit,
     onNavigateToAudioScribe: () -> Unit,
-    onNavigateToDocumentChat: () -> Unit = {},
     onNavigateToCodeCompanion: () -> Unit = {},
     onNavigateToTemplates: () -> Unit = {},
     onNavigateToFlashcards: () -> Unit = {},
     onNavigateToQuiz: () -> Unit = {},
+    onNavigateToRAGChat: () -> Unit = {},
     onNavigateToModels: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToHistory: () -> Unit,
@@ -84,6 +84,11 @@ fun HomeScreen(
     val currentModel by viewModel.currentModel.collectAsState()
     val modelLoadingState by viewModel.modelLoadingState.collectAsState()
     val recentConversations by viewModel.recentConversations.collectAsState()
+
+    // Search state
+    val isSearchActive by viewModel.isSearchActive.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsState()
+    val searchResults by viewModel.searchResults.collectAsState()
 
     // Core Features (horizontal scrolling cards with gradients)
     val coreFeatures = remember {
@@ -98,13 +103,13 @@ fun HomeScreen(
                 stats = "24/7"
             ),
             CoreFeatureCard(
-                id = "document_chat",
+                id = "rag_chat",
                 title = "Document Chat",
-                description = "Chat with your PDFs & docs",
+                description = "AI-powered semantic search",
                 icon = Icons.Outlined.Description,
                 gradient = listOf(Color(0xFFF093FB), Color(0xFFF5576C)),
-                badge = "New",
-                stats = "PDF"
+                badge = "AI",
+                stats = "RAG"
             ),
             CoreFeatureCard(
                 id = "prompt_lab",
@@ -139,6 +144,22 @@ fun HomeScreen(
                 icon = Icons.Outlined.Mic,
                 gradient = listOf(Color(0xFF30CFD0), Color(0xFF330867)),
                 stats = "STT"
+            ),
+            CoreFeatureCard(
+                id = "flashcards",
+                title = "Flashcards",
+                description = "AI-powered learning",
+                icon = Icons.Outlined.Style,
+                gradient = listOf(Color(0xFFFFD93D), Color(0xFFFF8C00)),
+                stats = "Study"
+            ),
+            CoreFeatureCard(
+                id = "quiz",
+                title = "Quiz Mode",
+                description = "Test your knowledge",
+                icon = Icons.Outlined.Quiz,
+                gradient = listOf(Color(0xFF8E44AD), Color(0xFFC0392B)),
+                stats = "Test"
             )
         )
     }
@@ -172,17 +193,28 @@ fun HomeScreen(
     Scaffold(
         topBar = {
             DashboardTopBar(
-                onSearchClick = { /* TODO: Implement global search */ },
+                isSearchActive = isSearchActive,
+                searchQuery = searchQuery,
+                onSearchQueryChange = viewModel::onSearchQueryChange,
+                onSearchClick = { viewModel.toggleSearch(true) },
+                onCloseSearch = { viewModel.toggleSearch(false) },
                 onSettingsClick = onNavigateToSettings
             )
         }
     ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
-        ) {
+        if (isSearchActive) {
+            SearchResultsList(
+                results = searchResults,
+                onResultClick = onNavigateToChat,
+                modifier = Modifier.padding(paddingValues)
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                verticalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
             // I. Model Status Banner
             item {
                 ModelStatusBanner(
@@ -219,21 +251,25 @@ fun HomeScreen(
                                 onCardClick = {
                                     when (feature.id) {
                                         "chat" -> onNavigateToChat(null)
-                                        "document_chat" -> onNavigateToDocumentChat()
+                                        "rag_chat" -> onNavigateToRAGChat()
                                         "prompt_lab" -> onNavigateToPromptLab()
                                         "code_companion" -> onNavigateToCodeCompanion()
                                         "ask_image" -> onNavigateToAskImage()
                                         "audio_scribe" -> onNavigateToAudioScribe()
+                                        "flashcards" -> onNavigateToFlashcards()
+                                        "quiz" -> onNavigateToQuiz()
                                     }
                                 },
                                 onActionClick = {
                                     when (feature.id) {
                                         "chat" -> onNavigateToChat(null)
-                                        "document_chat" -> onNavigateToDocumentChat()
+                                        "rag_chat" -> onNavigateToRAGChat()
                                         "prompt_lab" -> onNavigateToPromptLab()
                                         "code_companion" -> onNavigateToCodeCompanion()
                                         "ask_image" -> onNavigateToAskImage()
                                         "audio_scribe" -> onNavigateToAudioScribe()
+                                        "flashcards" -> onNavigateToFlashcards()
+                                        "quiz" -> onNavigateToQuiz()
                                     }
                                 }
                             )
@@ -329,6 +365,7 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.height(80.dp))
             }
         }
+        }
     }
 }
 
@@ -339,54 +376,95 @@ fun HomeScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DashboardTopBar(
+    isSearchActive: Boolean,
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
     onSearchClick: () -> Unit,
+    onCloseSearch: () -> Unit,
     onSettingsClick: () -> Unit
 ) {
-    TopAppBar(
-        title = {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Small icon before LocalLLM
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary)
+    if (isSearchActive) {
+        TopAppBar(
+            title = {
+                TextField(
+                    value = searchQuery,
+                    onValueChange = onSearchQueryChange,
+                    placeholder = { Text("Search conversations...") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent
+                    ),
+                    textStyle = MaterialTheme.typography.bodyLarge
                 )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "LocalLLM",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    letterSpacing = 0.5.sp
-                )
-            }
-        },
-        navigationIcon = {
-            IconButton(onClick = onSearchClick) {
-                Icon(
-                    Icons.Default.Search,
-                    contentDescription = "Search models and chats",
-                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                )
-            }
-        },
-        actions = {
-            IconButton(onClick = onSettingsClick) {
-                Icon(
-                    Icons.Default.Settings,
-                    contentDescription = "Settings",
-                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                )
-            }
-        },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            },
+            navigationIcon = {
+                IconButton(onClick = onCloseSearch) {
+                    Icon(Icons.Default.ArrowBack, "Close search")
+                }
+            },
+            actions = {
+                if (searchQuery.isNotEmpty()) {
+                    IconButton(onClick = { onSearchQueryChange("") }) {
+                        Icon(Icons.Default.Close, "Clear search")
+                    }
+                }
+            },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            )
         )
-    )
+    } else {
+        TopAppBar(
+            title = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Small icon before LocalLLM
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "LocalLLM",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = 0.5.sp
+                    )
+                }
+            },
+            navigationIcon = {
+                IconButton(onClick = onSearchClick) {
+                    Icon(
+                        Icons.Default.Search,
+                        contentDescription = "Search models and chats",
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    )
+                }
+            },
+            actions = {
+                IconButton(onClick = onSettingsClick) {
+                    Icon(
+                        Icons.Default.Settings,
+                        contentDescription = "Settings",
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    )
+                }
+            },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            )
+        )
+    }
 }
 
 // ============================================================================
@@ -914,3 +992,58 @@ private fun RecentConversationPreviewCard(
         }
     }
 }
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SearchResultsList(
+    results: List<HomeViewModel.RecentConversation>,
+    onResultClick: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    if (results.isEmpty()) {
+        Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(
+                text = "No results found",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    } else {
+        LazyColumn(
+            modifier = modifier.fillMaxSize(),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(results) { conversation ->
+                Card(
+                    onClick = { onResultClick(conversation.id) },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    )
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = conversation.title,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = conversation.lastMessage,
+                            style = MaterialTheme.typography.bodyMedium,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = conversation.timeAgo,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+

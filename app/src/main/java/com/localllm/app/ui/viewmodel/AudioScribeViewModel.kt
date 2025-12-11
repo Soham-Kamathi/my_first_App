@@ -9,12 +9,20 @@ import android.os.Build
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.localllm.app.data.model.ModelInfo
+import com.localllm.app.data.repository.ModelRepository
+import com.localllm.app.inference.WhisperManager
+import com.localllm.app.inference.WhisperLoadingState
+import com.localllm.app.inference.TranscriptionResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import java.io.File
 import javax.inject.Inject
 
@@ -30,7 +38,9 @@ enum class AudioState {
  */
 @HiltViewModel
 class AudioScribeViewModel @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val whisperManager: WhisperManager,
+    private val modelRepository: ModelRepository
 ) : ViewModel() {
 
     companion object {
@@ -55,24 +65,45 @@ class AudioScribeViewModel @Inject constructor(
     private val _translateToEnglish = MutableStateFlow(false)
     val translateToEnglish: StateFlow<Boolean> = _translateToEnglish.asStateFlow()
 
-    private val _isWhisperSupported = MutableStateFlow(false)
-    val isWhisperSupported: StateFlow<Boolean> = _isWhisperSupported.asStateFlow()
-
     private val _hasAudioPermission = MutableStateFlow(false)
     val hasAudioPermission: StateFlow<Boolean> = _hasAudioPermission.asStateFlow()
+    
+    private val _transcriptionProgress = MutableStateFlow(0f)
+    val transcriptionProgress: StateFlow<Float> = _transcriptionProgress.asStateFlow()
+
+    // Get downloaded Whisper models
+    val downloadedWhisperModels: StateFlow<List<ModelInfo>> = modelRepository.getDownloadedModels()
+        .map { models -> models.filter { it.isWhisper } }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+    
+    val currentWhisperModel: StateFlow<ModelInfo?> = whisperManager.currentModel
+    val whisperLoadingState: StateFlow<WhisperLoadingState> = whisperManager.loadingState
+    
+    val isWhisperSupported: StateFlow<Boolean> = downloadedWhisperModels.map { it.isNotEmpty() }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = false
+        )
 
     private var mediaRecorder: MediaRecorder? = null
     private var audioFile: File? = null
     private var durationJob: Job? = null
 
     init {
-        // Check if whisper is supported (placeholder - will be true when implemented)
-        checkWhisperSupport()
-    }
-
-    private fun checkWhisperSupport() {
-        // TODO: Check if whisper.cpp is available and model is loaded
-        _isWhisperSupported.value = false
+        // Auto-load first available Whisper model if not already loaded
+        viewModelScope.launch {
+            downloadedWhisperModels.collect { models ->
+                if (models.isNotEmpty() && whisperManager.currentModel.value == null) {
+                    // Auto-load the first (usually smallest) model
+                    loadWhisperModel(models.first())
+                }
+            }
+        }
     }
 
     fun setAudioPermission(granted: Boolean) {
@@ -190,6 +221,31 @@ class AudioScribeViewModel @Inject constructor(
         clearTranscription()
     }
 
+    /**
+     * Load a Whisper model for transcription.
+     */
+    fun loadWhisperModel(model: ModelInfo) {
+        if (!model.isWhisper) {
+            Log.w(TAG, "Attempted to load non-Whisper model: ${model.id}")
+            return
+        }
+        
+        viewModelScope.launch {
+            whisperManager.loadModel(model).fold(
+                onSuccess = {
+                    Log.d(TAG, "Whisper model loaded: ${model.name}")
+                },
+                onFailure = { error ->
+                    Log.e(TAG, "Failed to load Whisper model", error)
+                    _transcription.value = "Error loading model: ${error.message}"
+                }
+            )
+        }
+    }
+    
+    /**
+     * Transcribe audio using Whisper.
+     */
     fun transcribe() {
         if (_audioState.value != AudioState.HAS_AUDIO || audioFile == null) return
 
@@ -197,37 +253,67 @@ class AudioScribeViewModel @Inject constructor(
             try {
                 _isProcessing.value = true
                 _audioState.value = AudioState.PROCESSING
+                _transcriptionProgress.value = 0f
 
                 Log.d(TAG, "Starting transcription for: ${audioFile?.absolutePath}")
 
-                // TODO: Implement actual whisper.cpp transcription
-                // This will require:
-                // 1. Loading whisper.cpp native library
-                // 2. Loading Whisper GGML model
-                // 3. Processing audio (resampling to 16kHz if needed)
-                // 4. Running whisper inference
+                // Check if Whisper model is loaded
+                if (whisperManager.currentModel.value == null) {
+                    // Try to load first available model
+                    val models = downloadedWhisperModels.value
+                    if (models.isEmpty()) {
+                        _transcription.value = "⚠️ No Whisper model downloaded.\n\n" +
+                                "Please download a Whisper model from the Model Library first."
+                        _audioState.value = AudioState.HAS_AUDIO
+                        _isProcessing.value = false
+                        return@launch
+                    }
+                    
+                    // Load first model
+                    Log.d(TAG, "Auto-loading Whisper model: ${models.first().name}")
+                    whisperManager.loadModel(models.first()).fold(
+                        onSuccess = { /* Continue */ },
+                        onFailure = { error ->
+                            _transcription.value = "Error loading Whisper model: ${error.message}"
+                            _audioState.value = AudioState.HAS_AUDIO
+                            _isProcessing.value = false
+                            return@launch
+                        }
+                    )
+                }
 
-                // For now, show placeholder
-                delay(1000) // Simulate processing
+                // Perform transcription
+                val result = whisperManager.transcribe(
+                    audioPath = audioFile!!.absolutePath,
+                    language = _selectedLanguage.value,
+                    translate = _translateToEnglish.value
+                ) { progress ->
+                    _transcriptionProgress.value = progress
+                }
 
-                _transcription.value = "🎙️ Whisper transcription is not yet implemented.\n\n" +
-                        "To enable this feature, we need to:\n" +
-                        "• Integrate whisper.cpp native library\n" +
-                        "• Add Whisper GGML model support\n" +
-                        "• Implement audio preprocessing\n\n" +
-                        "Audio file: ${audioFile?.name}\n" +
-                        "Language: ${_selectedLanguage.value}\n" +
-                        "Translate: ${_translateToEnglish.value}\n\n" +
-                        "Stay tuned for future updates!"
+                when (result) {
+                    is TranscriptionResult.Success -> {
+                        _transcription.value = result.text
+                        Log.d(TAG, "Transcription completed in ${result.duration}s")
+                    }
+                    is TranscriptionResult.Error -> {
+                        _transcription.value = "❌ Transcription Error\n\n${result.message}"
+                        Log.e(TAG, "Transcription error: ${result.message}")
+                    }
+                    is TranscriptionResult.Progress -> {
+                        // Progress updates handled via callback
+                    }
+                }
 
                 _audioState.value = AudioState.HAS_AUDIO
 
             } catch (e: Exception) {
                 Log.e(TAG, "Transcription error", e)
-                _transcription.value = "Error: ${e.message}"
+                _transcription.value = "❌ Error: ${e.message}"
                 _audioState.value = AudioState.HAS_AUDIO
             } finally {
                 _isProcessing.value = false
+                _transcriptionProgress.value = 0f
             }
         }
     }

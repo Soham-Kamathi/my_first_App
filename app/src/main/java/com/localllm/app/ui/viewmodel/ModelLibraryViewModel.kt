@@ -53,6 +53,15 @@ class ModelLibraryViewModel @Inject constructor(
     private val _selectedTab = MutableStateFlow(ModelLibraryTab.DOWNLOADED)
     val selectedTab: StateFlow<ModelLibraryTab> = _selectedTab.asStateFlow()
 
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    private val _sortOption = MutableStateFlow(SortOption.NAME)
+    val sortOption: StateFlow<SortOption> = _sortOption.asStateFlow()
+
+    private val _filterOption = MutableStateFlow(FilterOption.ALL)
+    val filterOption: StateFlow<FilterOption> = _filterOption.asStateFlow()
+
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
@@ -74,6 +83,32 @@ class ModelLibraryViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
+
+    val filteredDownloadedModels: StateFlow<List<ModelInfo>> = combine(
+        downloadedModels,
+        searchQuery,
+        sortOption,
+        filterOption
+    ) { models, query, sort, filter ->
+        applyFiltersAndSort(models, query, sort, filter)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    val filteredAvailableModels: StateFlow<List<ModelInfo>> = combine(
+        availableModels,
+        searchQuery,
+        sortOption,
+        filterOption
+    ) { models, query, sort, filter ->
+        applyFiltersAndSort(models, query, sort, filter)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
 
     val downloadStates: StateFlow<Map<String, DownloadState>> = modelDownloader.downloadStates
         .stateIn(
@@ -99,6 +134,34 @@ class ModelLibraryViewModel @Inject constructor(
      */
     fun setSelectedTab(tab: ModelLibraryTab) {
         _selectedTab.value = tab
+    }
+
+    /**
+     * Update search query.
+     */
+    fun updateSearchQuery(query: String) {
+        _searchQuery.value = query
+    }
+
+    /**
+     * Clear search query.
+     */
+    fun clearSearch() {
+        _searchQuery.value = ""
+    }
+
+    /**
+     * Set sort option.
+     */
+    fun setSortOption(option: SortOption) {
+        _sortOption.value = option
+    }
+
+    /**
+     * Set filter option.
+     */
+    fun setFilterOption(option: FilterOption) {
+        _filterOption.value = option
     }
 
     /**
@@ -262,6 +325,47 @@ class ModelLibraryViewModel @Inject constructor(
     }
 
     /**
+     * Apply search, filter, and sort to a list of models.
+     */
+    private fun applyFiltersAndSort(
+        models: List<ModelInfo>,
+        query: String,
+        sort: SortOption,
+        filter: FilterOption
+    ): List<ModelInfo> {
+        var filtered = models
+
+        // Apply search filter
+        if (query.isNotBlank()) {
+            val lowerQuery = query.lowercase()
+            filtered = filtered.filter { model ->
+                model.name.lowercase().contains(lowerQuery) ||
+                model.id.lowercase().contains(lowerQuery) ||
+                model.author?.lowercase()?.contains(lowerQuery) == true ||
+                model.description.lowercase().contains(lowerQuery)
+            }
+        }
+
+        // Apply capability filter
+        filtered = when (filter) {
+            FilterOption.ALL -> filtered
+            FilterOption.TEXT_ONLY -> filtered.filter { !it.supportsVision }
+            FilterOption.VISION -> filtered.filter { it.supportsVision }
+        }
+
+        // Apply sort
+        filtered = when (sort) {
+            SortOption.NAME -> filtered.sortedBy { it.name.lowercase() }
+            SortOption.SIZE_ASC -> filtered.sortedBy { it.fileSizeBytes ?: Long.MAX_VALUE }
+            SortOption.SIZE_DESC -> filtered.sortedByDescending { it.fileSizeBytes ?: 0L }
+            SortOption.DOWNLOADS -> filtered.sortedByDescending { it.downloads ?: 0 }
+            SortOption.LIKES -> filtered.sortedByDescending { it.likes ?: 0 }
+        }
+
+        return filtered
+    }
+
+    /**
      * Load storage statistics.
      */
     private fun loadStorageStats() {
@@ -282,4 +386,24 @@ class ModelLibraryViewModel @Inject constructor(
 enum class ModelLibraryTab {
     DOWNLOADED,
     AVAILABLE
+}
+
+/**
+ * Sort options for model list.
+ */
+enum class SortOption(val displayName: String) {
+    NAME("Name (A-Z)"),
+    SIZE_ASC("Size (Small to Large)"),
+    SIZE_DESC("Size (Large to Small)"),
+    DOWNLOADS("Most Downloads"),
+    LIKES("Most Likes")
+}
+
+/**
+ * Filter options for model list.
+ */
+enum class FilterOption(val displayName: String) {
+    ALL("All Models"),
+    TEXT_ONLY("Text-Only Models"),
+    VISION("Vision Models")
 }

@@ -51,6 +51,8 @@ fun AskImageScreen(
     val isGenerating by viewModel.isGenerating.collectAsState()
     val isModelLoaded by viewModel.isModelLoaded.collectAsState()
     val isVisionSupported by viewModel.isVisionSupported.collectAsState()
+    val statusMessage by viewModel.statusMessage.collectAsState()
+    val currentVisionModel by viewModel.currentVisionModel.collectAsState()
 
     // Image picker launcher
     val imagePickerLauncher = rememberLauncherForActivityResult(
@@ -103,11 +105,14 @@ fun AskImageScreen(
                 .padding(16.dp)
                 .verticalScroll(scrollState)
         ) {
-            // Vision Support Warning
+            // Vision Support Warning or Status
             if (!isVisionSupported) {
                 Card(
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer
+                        containerColor = if (isModelLoaded) 
+                            MaterialTheme.colorScheme.tertiaryContainer 
+                        else 
+                            MaterialTheme.colorScheme.errorContainer
                     ),
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -116,24 +121,63 @@ fun AskImageScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            Icons.Default.Warning,
+                            if (isModelLoaded) Icons.Default.Info else Icons.Default.Warning,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error
+                            tint = if (isModelLoaded) 
+                                MaterialTheme.colorScheme.tertiary 
+                            else 
+                                MaterialTheme.colorScheme.error
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(
-                                "Vision Model Required",
+                                if (isModelLoaded) "Vision Model Needed" else "No Model Loaded",
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.error
+                                color = if (isModelLoaded) 
+                                    MaterialTheme.colorScheme.onTertiaryContainer 
+                                else 
+                                    MaterialTheme.colorScheme.error
                             )
                             Text(
-                                "Load a vision-capable model (e.g., LLaVA, BakLLaVA) to use this feature.",
+                                if (isModelLoaded) 
+                                    "Current model is text-only. Load a vision model like Moondream2 or NanoLLaVA."
+                                else 
+                                    "Load a vision model (Moondream2, NanoLLaVA, SmolVLM) from the Model Library.",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onErrorContainer
+                                color = if (isModelLoaded) 
+                                    MaterialTheme.colorScheme.onTertiaryContainer 
+                                else 
+                                    MaterialTheme.colorScheme.onErrorContainer
                             )
                         }
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            } else if (statusMessage.isNotEmpty()) {
+                // Show success status when vision model is loaded
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            statusMessage,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))

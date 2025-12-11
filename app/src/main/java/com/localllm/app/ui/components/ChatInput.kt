@@ -1,5 +1,8 @@
 package com.localllm.app.ui.components
 
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
@@ -17,13 +20,17 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import com.localllm.app.util.VoiceInputState
+import com.localllm.app.util.VoiceSpeechRecognizer
 
 /**
- * Chat input component with send button and generation controls.
+ * Chat input component with send button, voice input, and generation controls.
  */
 @Composable
 fun ChatInput(
@@ -36,6 +43,47 @@ fun ChatInput(
     onToggleWebSearch: (() -> Unit)? = null
 ) {
     var text by remember { mutableStateOf("") }
+    val context = LocalContext.current
+    
+    // Voice input state
+    var hasAudioPermission by remember { mutableStateOf(false) }
+    var showPermissionDialog by remember { mutableStateOf(false) }
+    
+    // Voice recognizer
+    val voiceRecognizer = remember {
+        VoiceSpeechRecognizer(
+            context = context,
+            onResult = { recognizedText ->
+                // Append recognized text to input field
+                text = if (text.isBlank()) recognizedText else "$text $recognizedText"
+            },
+            onError = { errorMessage ->
+                // Could show snackbar with error
+            }
+        )
+    }
+    
+    val voiceState by voiceRecognizer.state.collectAsState()
+    val partialResults by voiceRecognizer.partialResults.collectAsState()
+    
+    // Permission launcher
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        hasAudioPermission = granted
+        if (granted) {
+            voiceRecognizer.startListening()
+        } else {
+            showPermissionDialog = true
+        }
+    }
+    
+    // Clean up voice recognizer
+    DisposableEffect(Unit) {
+        onDispose {
+            voiceRecognizer.release()
+        }
+    }
     
     // Enhanced background with gradient - theme-aware
     val backgroundGradient = Brush.verticalGradient(
@@ -130,17 +178,80 @@ fun ChatInput(
             verticalAlignment = Alignment.Bottom,
             modifier = Modifier.fillMaxWidth()
         ) {
+            // Voice input button
+            if (!isGenerating) {
+                val isListening = voiceState is VoiceInputState.Listening
+                val micColor by animateColorAsState(
+                    targetValue = if (isListening) MaterialTheme.colorScheme.error
+                                 else MaterialTheme.colorScheme.primary,
+                    label = "micColor"
+                )
+                
+                // Pulsing animation when listening
+                val scale by animateFloatAsState(
+                    targetValue = if (isListening) 1.1f else 1f,
+                    animationSpec = if (isListening) {
+                        infiniteRepeatable(
+                            animation = tween(600),
+                            repeatMode = RepeatMode.Reverse
+                        )
+                    } else {
+                        spring()
+                    },
+                    label = "micScale"
+                )
+                
+                IconButton(
+                    onClick = {
+                        when (voiceState) {
+                            is VoiceInputState.Listening -> {
+                                voiceRecognizer.stopListening()
+                            }
+                            else -> {
+                                if (hasAudioPermission) {
+                                    voiceRecognizer.startListening()
+                                } else {
+                                    permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                                }
+                            }
+                        }
+                    },
+                    enabled = enabled && voiceRecognizer.isAvailable(),
+                    modifier = Modifier
+                        .size(48.dp)
+                        .scale(scale)
+                ) {
+                    Icon(
+                        imageVector = if (isListening) Icons.Default.Stop else Icons.Default.Mic,
+                        contentDescription = if (isListening) "Stop listening" else "Voice input",
+                        tint = if (enabled && voiceRecognizer.isAvailable()) micColor 
+                               else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+            
             // Enhanced text input
             OutlinedTextField(
-                value = text,
+                value = if (voiceState is VoiceInputState.Listening && partialResults.isNotBlank()) {
+                    partialResults
+                } else {
+                    text
+                },
                 onValueChange = { text = it },
                 modifier = Modifier.weight(1f),
-                enabled = enabled && !isGenerating,
+                enabled = enabled && !isGenerating && voiceState !is VoiceInputState.Listening,
                 placeholder = { 
                     Text(
-                        if (!enabled) "Load a model to chat" 
-                        else if (isGenerating) "Generating..."
-                        else "Type a message...",
+                        when {
+                            !enabled -> "Load a model to chat"
+                            isGenerating -> "Generating..."
+                            voiceState is VoiceInputState.Listening -> "Listening..."
+                            voiceState is VoiceInputState.Processing -> "Processing..."
+                            else -> "Type a message or tap mic..."
+                        },
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                     ) 
@@ -166,7 +277,7 @@ fun ChatInput(
                 ),
                 maxLines = 5,
                 trailingIcon = {
-                    if (text.isNotBlank() && !isGenerating) {
+                    if (text.isNotBlank() && !isGenerating && voiceState !is VoiceInputState.Listening) {
                         IconButton(
                             onClick = { text = "" },
                             modifier = Modifier.size(24.dp)
@@ -222,6 +333,20 @@ fun ChatInput(
                     modifier = Modifier.size(24.dp)
                 )
             }
+        }
+        
+        // Permission dialog
+        if (showPermissionDialog) {
+            AlertDialog(
+                onDismissRequest = { showPermissionDialog = false },
+                title = { Text("Microphone Permission Required") },
+                text = { Text("Voice input requires microphone permission. Please grant permission in app settings.") },
+                confirmButton = {
+                    TextButton(onClick = { showPermissionDialog = false }) {
+                        Text("OK")
+                    }
+                }
+            )
         }
     }
 }

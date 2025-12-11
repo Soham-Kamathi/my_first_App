@@ -36,35 +36,49 @@ set(GGML_CCACHE OFF CACHE BOOL "" FORCE)
 # ==============================================================================
 # GPU/NPU Acceleration Options
 # ==============================================================================
-# Enable Vulkan for GPU acceleration on supported devices
-# Vulkan is widely supported on Android 7.0+ (API 24+)
-#option(LOCALLLM_ENABLE_VULKAN "Enable Vulkan GPU acceleration" ON)
-#
-#if(LOCALLLM_ENABLE_VULKAN)
-#    # Check if Vulkan is available
-#    find_package(Vulkan QUIET)
-#    if(Vulkan_FOUND OR ANDROID)
-#        message(STATUS "Vulkan support enabled for GPU acceleration")
-#        set(GGML_VULKAN ON CACHE BOOL "" FORCE)
-#        set(GGML_VULKAN_CHECK_RESULTS OFF CACHE BOOL "" FORCE)
-#        set(GGML_VULKAN_DEBUG OFF CACHE BOOL "" FORCE)
-#        set(GGML_VULKAN_MEMORY_DEBUG OFF CACHE BOOL "" FORCE)
-#        set(GGML_VULKAN_SHADER_DEBUG_INFO OFF CACHE BOOL "" FORCE)
-#        set(GGML_VULKAN_VALIDATE OFF CACHE BOOL "" FORCE)
-#        add_definitions(-DLOCALLLM_VULKAN_ENABLED)
-#    else()
-#        message(STATUS "Vulkan not found - GPU acceleration disabled")
-#        set(GGML_VULKAN OFF CACHE BOOL "" FORCE)
-#    endif()
-#else()
-#    set(GGML_VULKAN OFF CACHE BOOL "" FORCE)
-#endif()
 
-# Force disable Vulkan for Android builds (shader generator cannot run on NDK)
-message(STATUS "Vulkan GPU disabled — Android cannot build host tools")
-set(GGML_VULKAN OFF CACHE BOOL "" FORCE)
+# Vulkan GPU Acceleration for Android
+# Note: Requires pre-compiled Vulkan shaders or host build of shader generator
+option(LOCALLLM_ENABLE_VULKAN "Enable Vulkan GPU acceleration" OFF)
+
+# Check if vulkan-shaders-gen executable exists (pre-built)
+set(VULKAN_SHADERS_GEN_EXE "${CMAKE_CURRENT_SOURCE_DIR}/llama.cpp/ggml/src/ggml-vulkan/vulkan-shaders/vulkan-shaders-gen${CMAKE_EXECUTABLE_SUFFIX}")
+set(VULKAN_SHADERS_HPP "${CMAKE_CURRENT_SOURCE_DIR}/llama.cpp/ggml/src/ggml-vulkan/vulkan-shaders-hpp.hpp")
+
+if(LOCALLLM_ENABLE_VULKAN)
+    # Check if pre-compiled shaders exist
+    if(EXISTS "${VULKAN_SHADERS_HPP}")
+        message(STATUS "✓ Vulkan support enabled - using pre-compiled shaders")
+        set(GGML_VULKAN ON CACHE BOOL "" FORCE)
+        set(GGML_VULKAN_CHECK_RESULTS OFF CACHE BOOL "" FORCE)
+        set(GGML_VULKAN_DEBUG OFF CACHE BOOL "" FORCE)
+        set(GGML_VULKAN_MEMORY_DEBUG OFF CACHE BOOL "" FORCE)
+        set(GGML_VULKAN_SHADER_DEBUG_INFO OFF CACHE BOOL "" FORCE)
+        set(GGML_VULKAN_VALIDATE OFF CACHE BOOL "" FORCE)
+        
+        # Disable shader generation (use pre-compiled)
+        set(GGML_VULKAN_GEN_SHADERS OFF CACHE BOOL "" FORCE)
+        
+        add_definitions(-DLOCALLLM_VULKAN_ENABLED)
+        message(STATUS "  → Pre-compiled shaders found at: ${VULKAN_SHADERS_HPP}")
+    else()
+        message(WARNING "⚠ Vulkan enabled but pre-compiled shaders not found")
+        message(WARNING "  To enable Vulkan, you must:")
+        message(WARNING "  1. Build vulkan-shaders-gen on your host machine:")
+        message(WARNING "     cd app/src/main/cpp/llama.cpp/ggml/src/ggml-vulkan/vulkan-shaders")
+        message(WARNING "     cmake -B build && cmake --build build")
+        message(WARNING "  2. Run the generator to create vulkan-shaders-hpp.hpp:")
+        message(WARNING "     ./build/vulkan-shaders-gen")
+        message(WARNING "  3. Rebuild the Android app")
+        message(WARNING "  → Falling back to CPU-only mode")
+        set(LOCALLLM_ENABLE_VULKAN OFF CACHE BOOL "" FORCE)
+        set(GGML_VULKAN OFF CACHE BOOL "" FORCE)
+    endif()
+else()
+    set(GGML_VULKAN OFF CACHE BOOL "" FORCE)
+endif()
+
 set(GGML_VULKAN_GEN_SHADERS OFF CACHE BOOL "" FORCE)
-set(LOCALLLM_ENABLE_VULKAN OFF CACHE BOOL "" FORCE)
 
 
 
@@ -94,6 +108,7 @@ find_library(android-lib android)
 # JNI bridge source (no external common files)
 add_library(localllm SHARED
     llama_jni.cpp
+    whisper_jni.cpp
 )
 
 # Include directories
@@ -114,19 +129,24 @@ target_link_libraries(localllm
 )
 
 # Link Vulkan if enabled
-#if(LOCALLLM_ENABLE_VULKAN AND (Vulkan_FOUND OR ANDROID))
-#    if(ANDROID)
-#        # On Android, Vulkan is part of the system
-#        target_link_libraries(localllm vulkan)
-#    else()
-#        target_link_libraries(localllm Vulkan::Vulkan)
-#    endif()
-#endif()
+if(LOCALLLM_ENABLE_VULKAN AND GGML_VULKAN)
+    message(STATUS "Linking Vulkan library for GPU acceleration")
+    # On Android, Vulkan is part of the system (API 24+)
+    target_link_libraries(localllm vulkan)
+endif()
 
 # Compiler definitions
 target_compile_definitions(localllm PRIVATE
     GGML_USE_CPU
 )
+
+# Add Vulkan definition if enabled
+if(LOCALLLM_ENABLE_VULKAN AND GGML_VULKAN)
+    target_compile_definitions(localllm PRIVATE
+        GGML_USE_VULKAN
+        LOCALLLM_VULKAN_ENABLED
+    )
+endif()
 
 # 16KB page alignment for Android 15+ devices
 set_target_properties(localllm PROPERTIES

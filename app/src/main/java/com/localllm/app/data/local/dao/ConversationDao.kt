@@ -94,8 +94,9 @@ interface ConversationDao {
 
     @Query("""
         SELECT c.* FROM conversations c 
-        INNER JOIN messages m ON c.id = m.conversationId 
-        WHERE m.content LIKE '%' || :searchQuery || '%' 
+        LEFT JOIN messages m ON c.id = m.conversationId 
+        WHERE c.title LIKE '%' || :searchQuery || '%' 
+           OR m.content LIKE '%' || :searchQuery || '%' 
         GROUP BY c.id 
         ORDER BY c.updatedAt DESC
     """)

@@ -38,6 +38,7 @@ class ModelRepository @Inject constructor(
          * - Reasoning: Advanced logic and math capabilities (DeepSeek R1 distills)
          * - Fast/Lightweight: Ultra-fast models for low-end devices
          * - Multilingual: Strong non-English language support
+         * - Vision: Multimodal models that can process images
          */
         private val POPULAR_GGUF_REPOS = listOf(
             // ========== GENERAL CHAT (Most Popular) ==========
@@ -92,11 +93,30 @@ class ModelRepository @Inject constructor(
             "Qwen/Qwen2.5-3B-Instruct-GGUF",             // 29+ languages
             "bartowski/aya-expanse-8b-GGUF",             // ~5GB Q4, 23 languages (Cohere)
             
+            // ========== VISION MODELS (Multimodal - Image + Text) ==========
+            // Small vision-capable models for mobile
+            "vikhyatk/moondream2-gguf",                  // ~1.2GB, tiny but capable vision
+            "qnguyen3/nanoLLaVA-gguf",                   // ~0.8GB, ultra-compact vision
+            "xtuner/llava-phi-3-mini-gguf",              // ~2.5GB, Phi-3 based vision
+            "mradermacher/SmolVLM-Instruct-GGUF",        // ~1.3GB, HF's compact VLM
+            
             // ========== LARGER MODELS (6GB+ RAM devices) ==========
             // For flagship devices with more RAM
             "TheBloke/Mistral-7B-Instruct-v0.2-GGUF",    // ~4.5GB Q4, strong 7B
             "bartowski/Llama-3.1-8B-Instruct-GGUF",      // ~5GB Q4, Meta's 8B
             "bartowski/gemma-2-9b-it-GGUF"               // ~5.5GB Q4, Google's 9B
+        )
+        
+        /**
+         * Known vision model repositories - these need special handling for mmproj files
+         */
+        private val VISION_MODEL_REPOS = setOf(
+            "vikhyatk/moondream2-gguf",
+            "qnguyen3/nanoLLaVA-gguf",
+            "xtuner/llava-phi-3-mini-gguf",
+            "mradermacher/SmolVLM-Instruct-GGUF",
+            "cjpais/llava-1.6-mistral-7b-gguf",
+            "second-state/Llava-v1.5-7B-GGUF"
         )
     }
     /**
@@ -155,7 +175,7 @@ class ModelRepository @Inject constructor(
                     
                     // Find GGUF files - prefer tree API for sizes, fall back to siblings
                     val ggufFiles = if (fileTree.isNotEmpty()) {
-                        fileTree.filter { it.path.endsWith(".gguf") }
+                        fileTree.filter { it.path.endsWith(".gguf") && !it.path.contains("mmproj") }
                             .map { file -> 
                                 GgufFileInfo(
                                     filename = file.path,
@@ -163,7 +183,7 @@ class ModelRepository @Inject constructor(
                                 )
                             }
                     } else {
-                        details.siblings?.filter { it.rfilename.endsWith(".gguf") }
+                        details.siblings?.filter { it.rfilename.endsWith(".gguf") && !it.rfilename.contains("mmproj") }
                             ?.map { file ->
                                 GgufFileInfo(
                                     filename = file.rfilename,
@@ -171,6 +191,17 @@ class ModelRepository @Inject constructor(
                                 )
                             } ?: emptyList()
                     }
+                    
+                    // For vision models, also try to find mmproj files
+                    val mmprojFile = if (isVisionModel(repoId)) {
+                        if (fileTree.isNotEmpty()) {
+                            fileTree.filter { it.path.contains("mmproj") && it.path.endsWith(".gguf") }
+                                .firstOrNull()?.path
+                        } else {
+                            details.siblings?.filter { it.rfilename.contains("mmproj") && it.rfilename.endsWith(".gguf") }
+                                ?.firstOrNull()?.rfilename
+                        }
+                    } else null
                     
                     // Filter for mobile-friendly quantizations
                     val mobileFiles = ggufFiles.filter { file ->
@@ -189,9 +220,23 @@ class ModelRepository @Inject constructor(
                         val modelId = "${repoId.replace("/", "-")}-${file.filename.removeSuffix(".gguf")}"
                         val downloadUrl = "https://huggingface.co/$repoId/resolve/main/${file.filename}"
                         
+                        // Build vision projector URL if this is a vision model
+                        val visionProjectorUrl = if (isVisionModel(repoId) && mmprojFile != null) {
+                            "https://huggingface.co/$repoId/resolve/main/$mmprojFile"
+                        } else if (isVisionModel(repoId)) {
+                            getVisionProjectorUrl(repoId, file.filename)
+                        } else null
+                        
+                        // Add emoji to name for vision models
+                        val displayName = if (isVisionModel(repoId)) {
+                            "${formatModelName(repoId, file.filename)} 🖼️"
+                        } else {
+                            formatModelName(repoId, file.filename)
+                        }
+                        
                         val modelInfo = ModelInfo(
                             id = modelId,
-                            name = formatModelName(repoId, file.filename),
+                            name = displayName,
                             parameterCount = extractParamCount(repoId, file.filename),
                             quantization = extractQuantization(file.filename),
                             fileSizeBytes = fileSize,
@@ -211,7 +256,9 @@ class ModelRepository @Inject constructor(
                             downloads = details.downloads,
                             likes = details.likes,
                             pipelineTag = details.pipeline_tag,
-                            lastModified = details.lastModified
+                            lastModified = details.lastModified,
+                            supportsVision = isVisionModel(repoId),
+                            visionProjectorUrl = visionProjectorUrl
                         )
                         
                         // Check if already downloaded
@@ -392,12 +439,58 @@ class ModelRepository @Inject constructor(
         if (combined.contains("instruct")) tags.add("instruct")
         if (combined.contains("chat")) tags.add("chat")
         
+        // Vision model tags
+        if (isVisionModel(repoId)) {
+            tags.add("vision")
+            tags.add("multimodal")
+        }
+        if (combined.contains("llava")) tags.add("llava")
+        if (combined.contains("moondream")) tags.add("moondream")
+        if (combined.contains("smolvlm")) tags.add("smolvlm")
+        
         return tags
+    }
+    
+    /**
+     * Check if a repository contains vision models.
+     */
+    private fun isVisionModel(repoId: String): Boolean {
+        val name = repoId.lowercase()
+        return name in VISION_MODEL_REPOS.map { it.lowercase() } ||
+               name.contains("llava") ||
+               name.contains("moondream") ||
+               name.contains("smolvlm") ||
+               name.contains("minicpm-v") ||
+               name.contains("vision") ||
+               name.contains("vlm")
+    }
+    
+    /**
+     * Get the mmproj (vision projector) URL for a vision model.
+     */
+    private fun getVisionProjectorUrl(repoId: String, filename: String): String? {
+        if (!isVisionModel(repoId)) return null
+        
+        // Try to construct mmproj URL based on common naming patterns
+        val baseName = filename.removeSuffix(".gguf")
+        val mmprojPatterns = listOf(
+            "mmproj-f16.gguf",
+            "mmproj-model-f16.gguf",
+            "$baseName-mmproj-f16.gguf"
+        )
+        
+        // Return first matching pattern (most common)
+        return "https://huggingface.co/$repoId/resolve/main/${repoId.split("/").last().replace("-GGUF", "").replace("-gguf", "")}-mmproj-f16.gguf"
     }
     
     private fun detectPromptTemplate(repoId: String): String {
         val name = repoId.lowercase()
         return when {
+            // Vision models first
+            name.contains("llava") -> "llava"
+            name.contains("moondream") -> "moondream"
+            name.contains("smolvlm") -> "smolvlm"
+            name.contains("minicpm-v") -> "minicpm-v"
             // Llama family
             name.contains("llama-3") || name.contains("llama3") -> "llama3"
             name.contains("llama-2") || name.contains("llama2") -> "llama2"

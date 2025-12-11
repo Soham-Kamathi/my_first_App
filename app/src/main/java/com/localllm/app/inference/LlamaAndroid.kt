@@ -370,4 +370,66 @@ class LlamaAndroid @Inject constructor() {
     }
     
     private external fun getThreadCountNative(): Int
+    
+    /**
+     * Check if Vulkan GPU acceleration is available.
+     */
+    fun isVulkanAvailable(): Boolean {
+        if (stubMode) return false
+        return try {
+            isVulkanAvailableNative()
+        } catch (e: UnsatisfiedLinkError) {
+            false
+        }
+    }
+    
+    private external fun isVulkanAvailableNative(): Boolean
+    
+    /**
+     * Get information about available Vulkan devices.
+     * Returns list of device names.
+     */
+    fun getVulkanDevices(): List<String> {
+        if (stubMode || !isVulkanAvailable()) return emptyList()
+        return try {
+            val deviceCount = getVulkanDeviceCountNative()
+            (0 until deviceCount).map { index ->
+                getVulkanDeviceNameNative(index) ?: "Unknown Device $index"
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting Vulkan devices", e)
+            emptyList()
+        }
+    }
+    
+    private external fun getVulkanDeviceCountNative(): Int
+    private external fun getVulkanDeviceNameNative(deviceIndex: Int): String?
+    
+    /**
+     * Get device information for display.
+     */
+    data class DeviceInfo(
+        val cpuCores: Int,
+        val hasVulkan: Boolean,
+        val vulkanDevices: List<String>,
+        val recommendedThreads: Int,
+        val recommendedGpuLayers: Int
+    )
+    
+    fun getDeviceInfo(): DeviceInfo {
+        val cpuCores = Runtime.getRuntime().availableProcessors()
+        val hasVulkan = isVulkanAvailable()
+        val vulkanDevices = getVulkanDevices()
+        val recommendedThreads = getThreadCount()
+        val recommendedGpuLayers = if (hasVulkan) 32 else 0
+        
+        return DeviceInfo(
+            cpuCores = cpuCores,
+            hasVulkan = hasVulkan,
+            vulkanDevices = vulkanDevices,
+            recommendedThreads = recommendedThreads,
+            recommendedGpuLayers = recommendedGpuLayers
+        )
+    }
 }
+

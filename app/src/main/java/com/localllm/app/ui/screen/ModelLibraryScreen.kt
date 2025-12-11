@@ -1,10 +1,13 @@
 package com.localllm.app.ui.screen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -24,8 +27,10 @@ import com.localllm.app.data.model.ModelInfo
 import com.localllm.app.inference.ModelLoadingState
 import com.localllm.app.ui.components.ModelCard
 import com.localllm.app.ui.components.DeviceCapabilityCard
+import com.localllm.app.ui.viewmodel.FilterOption
 import com.localllm.app.ui.viewmodel.ModelLibraryTab
 import com.localllm.app.ui.viewmodel.ModelLibraryViewModel
+import com.localllm.app.ui.viewmodel.SortOption
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 
 
@@ -40,6 +45,8 @@ fun ModelLibraryScreen(
 ) {
     val downloadedModels by viewModel.downloadedModels.collectAsState()
     val availableModels by viewModel.availableModels.collectAsState()
+    val filteredDownloadedModels by viewModel.filteredDownloadedModels.collectAsState()
+    val filteredAvailableModels by viewModel.filteredAvailableModels.collectAsState()
     val downloadStates by viewModel.downloadStates.collectAsState()
     val modelLoadingState by viewModel.modelLoadingState.collectAsState()
     val currentModel by viewModel.currentModel.collectAsState()
@@ -48,8 +55,13 @@ fun ModelLibraryScreen(
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val storageStats by viewModel.storageStats.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsState()
+    val sortOption by viewModel.sortOption.collectAsState()
+    val filterOption by viewModel.filterOption.collectAsState()
     
     var showDeleteDialog by remember { mutableStateOf<ModelInfo?>(null) }
+    var showSortMenu by remember { mutableStateOf(false) }
+    var showFilterMenu by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -179,6 +191,206 @@ fun ModelLibraryScreen(
                 )
             }
             
+            // Search bar with filter and sort
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Search field
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { viewModel.updateSearchQuery(it) },
+                    modifier = Modifier.weight(1f),
+                    placeholder = { Text("Search models...") },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Default.Search,
+                            contentDescription = "Search",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    trailingIcon = {
+                        if (searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { viewModel.clearSearch() }) {
+                                Icon(
+                                    Icons.Default.Clear,
+                                    contentDescription = "Clear search",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                    )
+                )
+                
+                // Sort button
+                Box {
+                    IconButton(
+                        onClick = { showSortMenu = true },
+                        modifier = Modifier
+                            .background(
+                                color = if (sortOption != SortOption.NAME)
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                                else
+                                    MaterialTheme.colorScheme.surfaceVariant,
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                    ) {
+                        Icon(
+                            Icons.Default.Sort,
+                            contentDescription = "Sort",
+                            tint = if (sortOption != SortOption.NAME)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    
+                    DropdownMenu(
+                        expanded = showSortMenu,
+                        onDismissRequest = { showSortMenu = false }
+                    ) {
+                        SortOption.values().forEach { option ->
+                            DropdownMenuItem(
+                                text = { 
+                                    Text(
+                                        option.displayName,
+                                        fontWeight = if (option == sortOption) FontWeight.Bold else FontWeight.Normal
+                                    )
+                                },
+                                onClick = {
+                                    viewModel.setSortOption(option)
+                                    showSortMenu = false
+                                },
+                                leadingIcon = {
+                                    if (option == sortOption) {
+                                        Icon(
+                                            Icons.Default.Check,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+                
+                // Filter button
+                Box {
+                    IconButton(
+                        onClick = { showFilterMenu = true },
+                        modifier = Modifier
+                            .background(
+                                color = if (filterOption != FilterOption.ALL)
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                                else
+                                    MaterialTheme.colorScheme.surfaceVariant,
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                    ) {
+                        Icon(
+                            Icons.Default.FilterList,
+                            contentDescription = "Filter",
+                            tint = if (filterOption != FilterOption.ALL)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    
+                    DropdownMenu(
+                        expanded = showFilterMenu,
+                        onDismissRequest = { showFilterMenu = false }
+                    ) {
+                        FilterOption.values().forEach { option ->
+                            DropdownMenuItem(
+                                text = { 
+                                    Text(
+                                        option.displayName,
+                                        fontWeight = if (option == filterOption) FontWeight.Bold else FontWeight.Normal
+                                    )
+                                },
+                                onClick = {
+                                    viewModel.setFilterOption(option)
+                                    showFilterMenu = false
+                                },
+                                leadingIcon = {
+                                    if (option == filterOption) {
+                                        Icon(
+                                            Icons.Default.Check,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+            
+            // Active filter chips
+            if (searchQuery.isNotEmpty() || sortOption != SortOption.NAME || filterOption != FilterOption.ALL) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (searchQuery.isNotEmpty()) {
+                        FilterChip(
+                            selected = true,
+                            onClick = { viewModel.clearSearch() },
+                            label = { Text("\"$searchQuery\"", maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                            trailingIcon = {
+                                Icon(
+                                    Icons.Default.Close,
+                                    contentDescription = "Clear",
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        )
+                    }
+                    if (sortOption != SortOption.NAME) {
+                        FilterChip(
+                            selected = true,
+                            onClick = { viewModel.setSortOption(SortOption.NAME) },
+                            label = { Text(sortOption.displayName, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                            trailingIcon = {
+                                Icon(
+                                    Icons.Default.Close,
+                                    contentDescription = "Clear",
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        )
+                    }
+                    if (filterOption != FilterOption.ALL) {
+                        FilterChip(
+                            selected = true,
+                            onClick = { viewModel.setFilterOption(FilterOption.ALL) },
+                            label = { Text(filterOption.displayName, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                            trailingIcon = {
+                                Icon(
+                                    Icons.Default.Close,
+                                    contentDescription = "Clear",
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        )
+                    }
+                }
+            }
+            
             // Enhanced error message
             errorMessage?.let { error ->
                 Surface(
@@ -218,8 +430,8 @@ fun ModelLibraryScreen(
             
             // Model list
             val models = when (selectedTab) {
-                ModelLibraryTab.DOWNLOADED -> downloadedModels
-                ModelLibraryTab.AVAILABLE -> availableModels
+                ModelLibraryTab.DOWNLOADED -> filteredDownloadedModels
+                ModelLibraryTab.AVAILABLE -> filteredAvailableModels
             }
             
             if (models.isEmpty()) {

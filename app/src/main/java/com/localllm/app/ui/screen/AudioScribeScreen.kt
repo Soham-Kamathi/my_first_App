@@ -47,6 +47,12 @@ fun AudioScribeScreen(
     val translateToEnglish by viewModel.translateToEnglish.collectAsState()
     val isWhisperSupported by viewModel.isWhisperSupported.collectAsState()
     val hasAudioPermission by viewModel.hasAudioPermission.collectAsState()
+    val downloadedWhisperModels by viewModel.downloadedWhisperModels.collectAsState()
+    val currentWhisperModel by viewModel.currentWhisperModel.collectAsState()
+    val whisperLoadingState by viewModel.whisperLoadingState.collectAsState()
+    val transcriptionProgress by viewModel.transcriptionProgress.collectAsState()
+    
+    var showModelPicker by remember { mutableStateOf(false) }
 
     // Permission launcher
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -96,41 +102,62 @@ fun AudioScribeScreen(
                 .padding(16.dp)
                 .verticalScroll(scrollState)
         ) {
-            // Whisper Support Status
-            if (!isWhisperSupported) {
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.tertiaryContainer
-                    ),
-                    modifier = Modifier.fillMaxWidth()
+            // Whisper Model Status
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = if (isWhisperSupported) 
+                        MaterialTheme.colorScheme.primaryContainer
+                    else 
+                        MaterialTheme.colorScheme.errorContainer
+                ),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(enabled = downloadedWhisperModels.isNotEmpty()) { 
+                            showModelPicker = true 
+                        }
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
                     ) {
                         Icon(
-                            Icons.Default.Info,
+                            if (isWhisperSupported) Icons.Default.CheckCircle else Icons.Default.Info,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.tertiary
+                            tint = if (isWhisperSupported) 
+                                MaterialTheme.colorScheme.primary
+                            else 
+                                MaterialTheme.colorScheme.error
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(
-                                "Whisper Model Required",
+                                if (isWhisperSupported) "Whisper Ready" else "No Whisper Model",
                                 style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.tertiary
+                                fontWeight = FontWeight.Bold
                             )
                             Text(
-                                "Load a Whisper model to enable audio transcription.",
+                                currentWhisperModel?.name ?: "Download a Whisper model from Model Library",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
+                    if (downloadedWhisperModels.size > 1) {
+                        Icon(
+                            Icons.Default.ArrowDropDown,
+                            contentDescription = "Change model",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
-                Spacer(modifier = Modifier.height(16.dp))
             }
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Recording Control Area
             Card(
@@ -451,30 +478,37 @@ fun AudioScribeScreen(
                     }
                 }
             }
-
-            // Not supported message
-            if (!isWhisperSupported && audioState == AudioState.HAS_AUDIO) {
+            
+            // Transcription progress
+            if (isProcessing && transcriptionProgress > 0f) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Card(
+                    modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer
-                    ),
-                    modifier = Modifier.fillMaxWidth()
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            "🎙️ Whisper Support Coming Soon",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                "Transcribing...",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                "${(transcriptionProgress * 100).toInt()}%",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            "Audio transcription requires whisper.cpp integration:\n" +
-                            "• Download Whisper GGML model\n" +
-                            "• Add whisper.cpp native library\n" +
-                            "• Implement audio processing pipeline\n\n" +
-                            "This feature will be added in a future update.",
-                            style = MaterialTheme.typography.bodySmall
+                        LinearProgressIndicator(
+                            progress = transcriptionProgress,
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
                 }
@@ -482,6 +516,70 @@ fun AudioScribeScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
         }
+    }
+    
+    // Model Picker Dialog
+    if (showModelPicker && downloadedWhisperModels.isNotEmpty()) {
+        AlertDialog(
+            onDismissRequest = { showModelPicker = false },
+            title = { Text("Select Whisper Model") },
+            text = {
+                Column {
+                    downloadedWhisperModels.forEach { model ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp)
+                                .clickable {
+                                    viewModel.loadWhisperModel(model)
+                                    showModelPicker = false
+                                },
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (model.id == currentWhisperModel?.id)
+                                    MaterialTheme.colorScheme.primaryContainer
+                                else
+                                    MaterialTheme.colorScheme.surfaceVariant
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                if (model.id == currentWhisperModel?.id) {
+                                    Icon(
+                                        Icons.Default.CheckCircle,
+                                        contentDescription = "Selected",
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                }
+                                Column {
+                                    Text(
+                                        model.name,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = if (model.id == currentWhisperModel?.id) 
+                                            FontWeight.Bold 
+                                        else 
+                                            FontWeight.Normal
+                                    )
+                                    Text(
+                                        "${model.formattedFileSize()} • ${model.parameterCount}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showModelPicker = false }) {
+                    Text("Close")
+                }
+            }
+        )
     }
 }
 

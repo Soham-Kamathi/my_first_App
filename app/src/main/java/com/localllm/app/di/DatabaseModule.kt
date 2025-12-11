@@ -6,6 +6,7 @@ import com.localllm.app.data.local.LocalLLMDatabase
 import com.localllm.app.data.local.PreferencesDataStore
 import com.localllm.app.data.local.dao.ConversationDao
 import com.localllm.app.data.local.dao.ModelDao
+import com.localllm.app.rag.DocumentChunkDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -27,7 +28,12 @@ object DatabaseModule {
             LocalLLMDatabase::class.java,
             "local_llm_database"
         )
-            .addMigrations(LocalLLMDatabase.MIGRATION_1_2)
+            .addMigrations(
+                LocalLLMDatabase.MIGRATION_1_2,
+                LocalLLMDatabase.MIGRATION_2_3,
+                LocalLLMDatabase.MIGRATION_3_4,
+                LocalLLMDatabase.MIGRATION_4_5
+            )
             .fallbackToDestructiveMigration()
             .build()
     }
@@ -42,6 +48,12 @@ object DatabaseModule {
     @Singleton
     fun provideConversationDao(database: LocalLLMDatabase): ConversationDao {
         return database.conversationDao()
+    }
+    
+    @Provides
+    @Singleton
+    fun provideDocumentChunkDao(database: LocalLLMDatabase): DocumentChunkDao {
+        return database.documentChunkDao()
     }
     
     @Provides

@@ -14,12 +14,12 @@ import com.localllm.app.ui.screen.ChatScreen
 import com.localllm.app.ui.screen.CodeCompanionScreen
 import com.localllm.app.ui.screen.ConversationHistoryScreen
 import com.localllm.app.ui.screen.ConversationTemplatesScreen
-import com.localllm.app.ui.screen.DocumentChatScreen
 import com.localllm.app.ui.screen.FlashcardScreen
 import com.localllm.app.ui.screen.HomeScreen
 import com.localllm.app.ui.screen.ModelLibraryScreen
 import com.localllm.app.ui.screen.PromptLabScreen
 import com.localllm.app.ui.screen.QuizScreen
+import com.localllm.app.ui.screen.RAGChatScreen
 import com.localllm.app.ui.screen.SettingsScreen
 import com.localllm.app.ui.viewmodel.AskImageViewModel
 import com.localllm.app.ui.viewmodel.AudioScribeViewModel
@@ -27,12 +27,12 @@ import com.localllm.app.ui.viewmodel.ChatViewModel
 import com.localllm.app.ui.viewmodel.CodeCompanionViewModel
 import com.localllm.app.ui.viewmodel.ConversationHistoryViewModel
 import com.localllm.app.ui.viewmodel.ConversationTemplatesViewModel
-import com.localllm.app.ui.viewmodel.DocumentChatViewModel
 import com.localllm.app.ui.viewmodel.FlashcardViewModel
 import com.localllm.app.ui.viewmodel.HomeViewModel
 import com.localllm.app.ui.viewmodel.ModelLibraryViewModel
 import com.localllm.app.ui.viewmodel.PromptLabViewModel
 import com.localllm.app.ui.viewmodel.QuizViewModel
+import com.localllm.app.ui.viewmodel.RAGChatViewModel
 import com.localllm.app.ui.viewmodel.SettingsViewModel
 
 sealed class Screen(val route: String) {
@@ -51,11 +51,11 @@ sealed class Screen(val route: String) {
     object PromptLab : Screen("prompt_lab")
     object AskImage : Screen("ask_image")
     object AudioScribe : Screen("audio_scribe")
-    object DocumentChat : Screen("document_chat")
     object CodeCompanion : Screen("code_companion")
     object ConversationTemplates : Screen("conversation_templates")
     object Flashcards : Screen("flashcards")
     object Quiz : Screen("quiz")
+    object RAGChat : Screen("rag_chat")
     object ModelLibrary : Screen("model_library")
     object Settings : Screen("settings")
     object ConversationHistory : Screen("conversation_history")
@@ -89,9 +89,6 @@ fun LocalLLMNavHost(
                 onNavigateToAudioScribe = {
                     navController.navigate(Screen.AudioScribe.route)
                 },
-                onNavigateToDocumentChat = {
-                    navController.navigate(Screen.DocumentChat.route)
-                },
                 onNavigateToCodeCompanion = {
                     navController.navigate(Screen.CodeCompanion.route)
                 },
@@ -103,6 +100,9 @@ fun LocalLLMNavHost(
                 },
                 onNavigateToQuiz = {
                     navController.navigate(Screen.Quiz.route)
+                },
+                onNavigateToRAGChat = {
+                    navController.navigate(Screen.RAGChat.route)
                 },
                 onNavigateToModels = {
                     navController.navigate(Screen.ModelLibrary.route)
@@ -243,21 +243,6 @@ fun LocalLLMNavHost(
             )
         }
         
-        // Document Chat
-        composable(Screen.DocumentChat.route) {
-            val viewModel: DocumentChatViewModel = hiltViewModel()
-            
-            DocumentChatScreen(
-                viewModel = viewModel,
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
-                onNavigateToModels = {
-                    navController.navigate(Screen.ModelLibrary.route)
-                }
-            )
-        }
-        
         // Code Companion
         composable(Screen.CodeCompanion.route) {
             val viewModel: CodeCompanionViewModel = hiltViewModel()
@@ -310,6 +295,21 @@ fun LocalLLMNavHost(
                 viewModel = viewModel,
                 onNavigateBack = {
                     navController.popBackStack()
+                }
+            )
+        }
+        
+        // RAG Chat
+        composable(Screen.RAGChat.route) {
+            val viewModel: RAGChatViewModel = hiltViewModel()
+            
+            RAGChatScreen(
+                viewModel = viewModel,
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToModels = {
+                    navController.navigate(Screen.ModelLibrary.route)
                 }
             )
         }
