@@ -34,6 +34,8 @@ import com.localllm.app.R
 import com.localllm.app.inference.ModelLoadingState
 import com.localllm.app.ui.components.FeatureCard
 import com.localllm.app.ui.viewmodel.HomeViewModel
+import com.localllm.app.ui.theme.LocalAppearanceStyle
+import com.localllm.app.data.model.AppearanceStyle
 import org.bouncycastle.math.raw.Mod
 
 /**
@@ -90,79 +92,157 @@ fun HomeScreen(
     val searchQuery by viewModel.searchQuery.collectAsState()
     val searchResults by viewModel.searchResults.collectAsState()
 
+    // Get current appearance style
+    val appearanceStyle = LocalAppearanceStyle.current
+    val isNothingTheme = appearanceStyle == AppearanceStyle.NOTHING
+
     // Core Features (horizontal scrolling cards with gradients)
-    // Nothing theme: Black/Grey/White/Red color palette
-    val coreFeatures = remember {
-        listOf(
-            CoreFeatureCard(
-                id = "chat",
-                title = "AI Chat",
-                description = "Start intelligent conversations",
-                icon = Icons.Outlined.Chat,
-                gradient = listOf(Color(0xFFD92027), Color(0xFFB71C1C)),
-                badge = "Popular",
-                stats = "24/7"
-            ),
-            CoreFeatureCard(
-                id = "rag_chat",
-                title = "Document Chat",
-                description = "AI-powered semantic search",
-                icon = Icons.Outlined.Description,
-                gradient = listOf(Color(0xFF424242), Color(0xFF212121)),
-                badge = "AI",
-                stats = "RAG"
-            ),
-            CoreFeatureCard(
-                id = "prompt_lab",
-                title = "Prompt Lab",
-                description = "Experiment & fine-tune",
-                icon = Icons.Outlined.Science,
-                gradient = listOf(Color(0xFF757575), Color(0xFF424242)),
-                badge = "Pro",
-                stats = "Test"
-            ),
-            CoreFeatureCard(
-                id = "code_companion",
-                title = "Code Companion",
-                description = "Debug & optimize code",
-                icon = Icons.Outlined.Code,
-                gradient = listOf(Color(0xFF212121), Color(0xFF000000)),
-                badge = "Beta",
-                stats = "Dev"
-            ),
-            CoreFeatureCard(
-                id = "ask_image",
-                title = "Ask Image",
-                description = "Visual AI analysis",
-                icon = Icons.Outlined.Image,
-                gradient = listOf(Color(0xFFE85057), Color(0xFFD92027)),
-                stats = "Vision"
-            ),
-            CoreFeatureCard(
-                id = "audio_scribe",
-                title = "Audio Scribe",
-                description = "Speech to text locally",
-                icon = Icons.Outlined.Mic,
-                gradient = listOf(Color(0xFF616161), Color(0xFF303030)),
-                stats = "STT"
-            ),
-            CoreFeatureCard(
-                id = "flashcards",
-                title = "Flashcards",
-                description = "AI-powered learning",
-                icon = Icons.Outlined.Style,
-                gradient = listOf(Color(0xFFEEEEEE), Color(0xFFBDBDBD)),
-                stats = "Study"
-            ),
-            CoreFeatureCard(
-                id = "quiz",
-                title = "Quiz Mode",
-                description = "Test your knowledge",
-                icon = Icons.Outlined.Quiz,
-                gradient = listOf(Color(0xFF9E9E9E), Color(0xFF757575)),
-                stats = "Test"
+    val coreFeatures = remember(isNothingTheme) {
+        if (isNothingTheme) {
+            // Nothing theme: Black/Grey/White/Red color palette
+            listOf(
+                CoreFeatureCard(
+                    id = "chat",
+                    title = "AI Chat",
+                    description = "Start intelligent conversations",
+                    icon = Icons.Outlined.Chat,
+                    gradient = listOf(Color(0xFFD92027), Color(0xFFB71C1C)),
+                    badge = "Popular",
+                    stats = "24/7"
+                ),
+                CoreFeatureCard(
+                    id = "rag_chat",
+                    title = "Document Chat",
+                    description = "AI-powered semantic search",
+                    icon = Icons.Outlined.Description,
+                    gradient = listOf(Color(0xFF424242), Color(0xFF212121)),
+                    badge = "AI",
+                    stats = "RAG"
+                ),
+                CoreFeatureCard(
+                    id = "prompt_lab",
+                    title = "Prompt Lab",
+                    description = "Experiment & fine-tune",
+                    icon = Icons.Outlined.Science,
+                    gradient = listOf(Color(0xFF757575), Color(0xFF424242)),
+                    badge = "Pro",
+                    stats = "Test"
+                ),
+                CoreFeatureCard(
+                    id = "code_companion",
+                    title = "Code Companion",
+                    description = "Debug & optimize code",
+                    icon = Icons.Outlined.Code,
+                    gradient = listOf(Color(0xFF212121), Color(0xFF000000)),
+                    badge = "Beta",
+                    stats = "Dev"
+                ),
+                CoreFeatureCard(
+                    id = "ask_image",
+                    title = "Ask Image",
+                    description = "Visual AI analysis",
+                    icon = Icons.Outlined.Image,
+                    gradient = listOf(Color(0xFFE85057), Color(0xFFD92027)),
+                    stats = "Vision"
+                ),
+                CoreFeatureCard(
+                    id = "audio_scribe",
+                    title = "Audio Scribe",
+                    description = "Speech to text locally",
+                    icon = Icons.Outlined.Mic,
+                    gradient = listOf(Color(0xFF616161), Color(0xFF303030)),
+                    stats = "STT"
+                ),
+                CoreFeatureCard(
+                    id = "flashcards",
+                    title = "Flashcards",
+                    description = "AI-powered learning",
+                    icon = Icons.Outlined.Style,
+                    gradient = listOf(Color(0xFFEEEEEE), Color(0xFFBDBDBD)),
+                    stats = "Study"
+                ),
+                CoreFeatureCard(
+                    id = "quiz",
+                    title = "Quiz Mode",
+                    description = "Test your knowledge",
+                    icon = Icons.Outlined.Quiz,
+                    gradient = listOf(Color(0xFF9E9E9E), Color(0xFF757575)),
+                    stats = "Test"
+                )
             )
-        )
+        } else {
+            // Default theme: Original cyan/blue gradient colors
+            listOf(
+                CoreFeatureCard(
+                    id = "chat",
+                    title = "AI Chat",
+                    description = "Start intelligent conversations",
+                    icon = Icons.Outlined.Chat,
+                    gradient = listOf(Color(0xFF0288D1), Color(0xFF0277BD)),
+                    badge = "Popular",
+                    stats = "24/7"
+                ),
+                CoreFeatureCard(
+                    id = "rag_chat",
+                    title = "Document Chat",
+                    description = "AI-powered semantic search",
+                    icon = Icons.Outlined.Description,
+                    gradient = listOf(Color(0xFF00796B), Color(0xFF00695C)),
+                    badge = "AI",
+                    stats = "RAG"
+                ),
+                CoreFeatureCard(
+                    id = "prompt_lab",
+                    title = "Prompt Lab",
+                    description = "Experiment & fine-tune",
+                    icon = Icons.Outlined.Science,
+                    gradient = listOf(Color(0xFF5E35B1), Color(0xFF512DA8)),
+                    badge = "Pro",
+                    stats = "Test"
+                ),
+                CoreFeatureCard(
+                    id = "code_companion",
+                    title = "Code Companion",
+                    description = "Debug & optimize code",
+                    icon = Icons.Outlined.Code,
+                    gradient = listOf(Color(0xFF1565C0), Color(0xFF0D47A1)),
+                    badge = "Beta",
+                    stats = "Dev"
+                ),
+                CoreFeatureCard(
+                    id = "ask_image",
+                    title = "Ask Image",
+                    description = "Visual AI analysis",
+                    icon = Icons.Outlined.Image,
+                    gradient = listOf(Color(0xFF00897B), Color(0xFF00796B)),
+                    stats = "Vision"
+                ),
+                CoreFeatureCard(
+                    id = "audio_scribe",
+                    title = "Audio Scribe",
+                    description = "Speech to text locally",
+                    icon = Icons.Outlined.Mic,
+                    gradient = listOf(Color(0xFF6A1B9A), Color(0xFF4A148C)),
+                    stats = "STT"
+                ),
+                CoreFeatureCard(
+                    id = "flashcards",
+                    title = "Flashcards",
+                    description = "AI-powered learning",
+                    icon = Icons.Outlined.Style,
+                    gradient = listOf(Color(0xFF00ACC1), Color(0xFF0097A7)),
+                    stats = "Study"
+                ),
+                CoreFeatureCard(
+                    id = "quiz",
+                    title = "Quiz Mode",
+                    description = "Test your knowledge",
+                    icon = Icons.Outlined.Quiz,
+                    gradient = listOf(Color(0xFF00838F), Color(0xFF006064)),
+                    stats = "Test"
+                )
+            )
+        }
     }
 
     // Secondary Features (horizontal chips)

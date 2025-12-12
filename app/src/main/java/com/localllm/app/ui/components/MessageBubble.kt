@@ -18,6 +18,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.localllm.app.data.model.ChatMessage
 import com.localllm.app.data.model.MessageRole
+import com.localllm.app.ui.theme.LocalAppearanceStyle
+import com.localllm.app.data.model.AppearanceStyle
 
 
 /**
@@ -35,26 +37,53 @@ fun MessageBubble(
     val isUser = message.role == MessageRole.USER
     var showActions by remember { mutableStateOf(false) }
     val isDarkTheme = MaterialTheme.colorScheme.background == Color(0xFF000000)
+    val isNothingTheme = LocalAppearanceStyle.current == AppearanceStyle.NOTHING
     
-    // Nothing theme: Use red gradient for user, grey/black for assistant
+    // User gradient: Red for Nothing theme, Cyan for Default theme
     val userGradient = Brush.linearGradient(
-        colors = if (isDarkTheme) {
-            listOf(
-                Color(0xFFFF3B42),  // Nothing Red Dark
-                Color(0xFFD92027)   // Nothing Red
-            )
+        colors = if (isNothingTheme) {
+            // Nothing theme: Red gradient
+            if (isDarkTheme) {
+                listOf(
+                    Color(0xFFFF3B42),  // Nothing Red Dark
+                    Color(0xFFD92027)   // Nothing Red
+                )
+            } else {
+                listOf(
+                    Color(0xFFD92027),  // Nothing Red
+                    Color(0xFFB71C1C)   // Darker Red
+                )
+            }
         } else {
-            listOf(
-                Color(0xFFD92027),  // Nothing Red
-                Color(0xFFB71C1C)   // Darker Red
-            )
+            // Default theme: Original cyan gradient
+            if (isDarkTheme) {
+                listOf(
+                    Color(0xFF00E5FF),  // Cyan A400
+                    Color(0xFF00BCD4)   // Cyan 500
+                )
+            } else {
+                listOf(
+                    Color(0xFF00BCD4),  // Cyan 500
+                    Color(0xFF0097A7)   // Cyan 700
+                )
+            }
         }
     )
     
-    val assistantSurfaceColor = if (isDarkTheme) {
-        Color(0xFF212121)  // Nothing Grey 900
+    val assistantSurfaceColor = if (isNothingTheme) {
+        // Nothing theme: Grey surfaces
+        if (isDarkTheme) {
+            Color(0xFF212121)  // Nothing Grey 900
+        } else {
+            Color(0xFFF5F5F5)  // Nothing Grey 100
+        }
     } else {
-        Color(0xFFF5F5F5)  // Nothing Grey 100
+        // Default theme: Standard material surfaces
+        if (isDarkTheme) {
+            Color(0xFF1E1E1E)  // Dark surface
+        } else {
+            Color(0xFFF5F5F5)  // Light surface
+        }
     }
     
     Column(
