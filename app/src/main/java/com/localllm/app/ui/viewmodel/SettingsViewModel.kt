@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.localllm.app.data.local.PreferencesDataStore
 import com.localllm.app.data.model.AppTheme
+import com.localllm.app.data.model.AppearanceStyle
 import com.localllm.app.data.model.GenerationConfig
 import com.localllm.app.data.model.StorageType
 import com.localllm.app.data.model.UserPreferences
@@ -68,6 +69,15 @@ class SettingsViewModel @Inject constructor(
     fun updateTheme(theme: AppTheme) {
         viewModelScope.launch {
             preferencesDataStore.updateTheme(theme)
+        }
+    }
+
+    /**
+     * Update the appearance style (Default or Nothing OS inspired).
+     */
+    fun updateAppearanceStyle(style: AppearanceStyle) {
+        viewModelScope.launch {
+            preferencesDataStore.updateAppearanceStyle(style)
         }
     }
 

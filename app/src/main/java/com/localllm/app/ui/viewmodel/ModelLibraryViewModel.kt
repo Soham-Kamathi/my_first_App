@@ -2,6 +2,7 @@ package com.localllm.app.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.localllm.app.data.local.PreferencesDataStore
 import com.localllm.app.data.model.DeviceInfo
 import com.localllm.app.data.model.DownloadState
 import com.localllm.app.data.model.ModelInfo
@@ -44,7 +45,8 @@ class ModelLibraryViewModel @Inject constructor(
     private val getAvailableModelsUseCase: GetAvailableModelsUseCase,
     private val refreshModelCatalogUseCase: RefreshModelCatalogUseCase,
     private val deleteDownloadedModelUseCase: DeleteDownloadedModelUseCase,
-    private val getStorageStatsUseCase: GetStorageStatsUseCase
+    private val getStorageStatsUseCase: GetStorageStatsUseCase,
+    private val preferencesDataStore: PreferencesDataStore
 ) : ViewModel() {
 
     private val _isRefreshing = MutableStateFlow(false)
@@ -207,6 +209,8 @@ class ModelLibraryViewModel @Inject constructor(
                         localPath = localPath,
                         downloadedDate = System.currentTimeMillis()
                     )
+                    // Set as default model automatically
+                    preferencesDataStore.updateDefaultModel(model.id)
                     loadStorageStats()
                 },
                 onFailure = { error ->
@@ -273,7 +277,8 @@ class ModelLibraryViewModel @Inject constructor(
                 useNNAPI = hardwareCapabilities.supportsNNAPI()
             ).fold(
                 onSuccess = {
-                    // Model loaded successfully
+                    // Model loaded successfully - set as default
+                    preferencesDataStore.updateDefaultModel(model.id)
                 },
                 onFailure = { error ->
                     _errorMessage.value = "Failed to load model: ${error.message}"

@@ -5,6 +5,7 @@ package com.localllm.app.data.model
  */
 data class UserPreferences(
     val theme: AppTheme = AppTheme.SYSTEM,
+    val appearanceStyle: AppearanceStyle = AppearanceStyle.DEFAULT,
     val defaultModelId: String? = null,
     val defaultSystemPrompt: String = DEFAULT_SYSTEM_PROMPT,
     val defaultGenerationConfig: GenerationConfig = GenerationConfig.BALANCED,
@@ -43,6 +44,16 @@ enum class AppTheme {
     LIGHT,
     DARK,
     SYSTEM
+}
+
+/**
+ * Appearance style options - affects overall visual design language.
+ * DEFAULT: Modern cyan/teal premium AI interface
+ * NOTHING: Minimalist black/white/red inspired by Nothing OS design language
+ */
+enum class AppearanceStyle {
+    DEFAULT,
+    NOTHING
 }
 
 /**

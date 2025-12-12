@@ -36,25 +36,25 @@ fun MessageBubble(
     var showActions by remember { mutableStateOf(false) }
     val isDarkTheme = MaterialTheme.colorScheme.background == Color(0xFF000000)
     
-    // Enhanced gradient backgrounds - theme-aware
+    // Nothing theme: Use red gradient for user, grey/black for assistant
     val userGradient = Brush.linearGradient(
         colors = if (isDarkTheme) {
             listOf(
-                Color(0xFF00E5FF),
-                Color(0xFF00B8D4)
+                Color(0xFFFF3B42),  // Nothing Red Dark
+                Color(0xFFD92027)   // Nothing Red
             )
         } else {
             listOf(
-                MaterialTheme.colorScheme.primary,
-                MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
+                Color(0xFFD92027),  // Nothing Red
+                Color(0xFFB71C1C)   // Darker Red
             )
         }
     )
     
     val assistantSurfaceColor = if (isDarkTheme) {
-        Color(0xFF1E1E1E)
+        Color(0xFF212121)  // Nothing Grey 900
     } else {
-        MaterialTheme.colorScheme.surfaceVariant
+        Color(0xFFF5F5F5)  // Nothing Grey 100
     }
     
     Column(

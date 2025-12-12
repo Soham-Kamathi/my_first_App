@@ -1,7 +1,12 @@
 package com.localllm.app.ui.screen
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -10,12 +15,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.localllm.app.data.model.AppTheme
+import com.localllm.app.data.model.AppearanceStyle
 import com.localllm.app.data.model.GenerationConfig
 import com.localllm.app.data.model.WebSearchProvider
 import com.localllm.app.ui.viewmodel.SettingsViewModel
@@ -93,6 +100,12 @@ fun SettingsScreen(
                         }
                     }
                 }
+                
+                // Appearance Style selection (Default vs Nothing OS inspired)
+                AppearanceStyleSelector(
+                    currentStyle = userPreferences.appearanceStyle,
+                    onStyleSelected = { viewModel.updateAppearanceStyle(it) }
+                )
                 
                 SettingsSwitchItem(
                     title = "Keep screen on during generation",
@@ -762,5 +775,201 @@ private fun SettingsSliderItem(
             valueRange = valueRange,
             steps = steps
         )
+    }
+}
+
+/**
+ * Appearance Style Selector with visual preview cards
+ * Allows users to switch between Default and Nothing OS-inspired themes
+ */
+@Composable
+private fun AppearanceStyleSelector(
+    currentStyle: AppearanceStyle,
+    onStyleSelected: (AppearanceStyle) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Style,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Column {
+                Text(
+                    text = "Appearance Style",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Text(
+                    text = "Choose your preferred visual design",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Style selection cards
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Default Style Card
+            StylePreviewCard(
+                title = "Default",
+                subtitle = "Modern & Vibrant",
+                isSelected = currentStyle == AppearanceStyle.DEFAULT,
+                onClick = { onStyleSelected(AppearanceStyle.DEFAULT) },
+                previewColors = listOf(
+                    androidx.compose.ui.graphics.Color(0xFF00BCD4), // Cyan primary
+                    androidx.compose.ui.graphics.Color(0xFF121212), // Dark surface
+                    androidx.compose.ui.graphics.Color(0xFF00E5FF)  // Accent
+                ),
+                modifier = Modifier.weight(1f)
+            )
+            
+            // Nothing Style Card
+            StylePreviewCard(
+                title = "Nothing",
+                subtitle = "Minimal & Bold",
+                isSelected = currentStyle == AppearanceStyle.NOTHING,
+                onClick = { onStyleSelected(AppearanceStyle.NOTHING) },
+                previewColors = listOf(
+                    androidx.compose.ui.graphics.Color(0xFFD92027), // Nothing Red
+                    androidx.compose.ui.graphics.Color(0xFF000000), // True Black
+                    androidx.compose.ui.graphics.Color(0xFFFFFFFF)  // White
+                ),
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+/**
+ * Style preview card showing a mini preview of the theme
+ */
+@Composable
+private fun StylePreviewCard(
+    title: String,
+    subtitle: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    previewColors: List<androidx.compose.ui.graphics.Color>,
+    modifier: Modifier = Modifier
+) {
+    val borderColor = if (isSelected) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+    }
+    
+    val backgroundColor = if (isSelected) {
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+    } else {
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+    }
+    
+    Surface(
+        modifier = modifier
+            .height(140.dp)
+            .clickable(onClick = onClick),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+        color = backgroundColor,
+        border = androidx.compose.foundation.BorderStroke(
+            width = if (isSelected) 2.dp else 1.dp,
+            color = borderColor
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            // Mini preview area
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(60.dp)
+                    .background(
+                        color = previewColors.getOrElse(1) { androidx.compose.ui.graphics.Color.Gray },
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+                    )
+                    .padding(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Accent color circle
+                Box(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .background(
+                            color = previewColors.getOrElse(0) { androidx.compose.ui.graphics.Color.Cyan },
+                            shape = androidx.compose.foundation.shape.CircleShape
+                        )
+                )
+                // Text preview lines
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(40.dp)
+                            .height(6.dp)
+                            .background(
+                                color = previewColors.getOrElse(2) { androidx.compose.ui.graphics.Color.White }.copy(alpha = 0.9f),
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(3.dp)
+                            )
+                    )
+                    Box(
+                        modifier = Modifier
+                            .width(28.dp)
+                            .height(4.dp)
+                            .background(
+                                color = previewColors.getOrElse(2) { androidx.compose.ui.graphics.Color.White }.copy(alpha = 0.5f),
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(2.dp)
+                            )
+                    )
+                }
+            }
+            
+            // Title and selection indicator
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                    )
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                
+                if (isSelected) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = "Selected",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+        }
     }
 }

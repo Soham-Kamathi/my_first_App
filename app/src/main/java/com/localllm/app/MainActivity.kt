@@ -9,13 +9,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.localllm.app.ui.navigation.LocalLLMBottomNavBar
 import com.localllm.app.ui.navigation.LocalLLMNavHost
 import com.localllm.app.ui.theme.LocalLLMTheme
+import com.localllm.app.ui.viewmodel.SettingsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -26,7 +29,14 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         
         setContent {
-            LocalLLMTheme {
+            // Get user preferences for theme and appearance style
+            val settingsViewModel: SettingsViewModel = hiltViewModel()
+            val userPreferences by settingsViewModel.userPreferences.collectAsState()
+            
+            LocalLLMTheme(
+                appTheme = userPreferences.theme,
+                appearanceStyle = userPreferences.appearanceStyle
+            ) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background

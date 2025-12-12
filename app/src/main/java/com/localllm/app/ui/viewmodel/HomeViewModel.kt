@@ -1,12 +1,15 @@
 package com.localllm.app.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.localllm.app.data.local.PreferencesDataStore
 import com.localllm.app.data.model.ModelInfo
 import com.localllm.app.data.repository.ConversationRepository
 import com.localllm.app.data.repository.ModelRepository
 import com.localllm.app.inference.ModelLoadingState
 import com.localllm.app.inference.ModelManager
+import com.localllm.app.util.HardwareCapabilities
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -34,8 +37,14 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     private val modelManager: ModelManager,
     private val modelRepository: ModelRepository,
-    private val conversationRepository: ConversationRepository
+    private val conversationRepository: ConversationRepository,
+    private val preferencesDataStore: PreferencesDataStore,
+    private val hardwareCapabilities: HardwareCapabilities
 ) : ViewModel() {
+    
+    companion object {
+        private const val TAG = "HomeViewModel"
+    }
 
     data class RecentConversation(
         val id: String,
@@ -87,6 +96,69 @@ class HomeViewModel @Inject constructor(
 
     init {
         loadRecentConversations()
+        autoLoadDefaultModel()
+    }
+    
+    /**
+     * Auto-load the default model if auto-load is enabled and model is not already loaded.
+     */
+    private fun autoLoadDefaultModel() {
+        viewModelScope.launch {
+            try {
+                // Check if auto-load is enabled
+                val preferences = preferencesDataStore.userPreferencesFlow.first()
+                if (!preferences.autoLoadLastModel) {
+                    Log.d(TAG, "Auto-load is disabled")
+                    return@launch
+                }
+                
+                // Check if a model is already loaded
+                if (modelManager.isModelLoaded) {
+                    Log.d(TAG, "Model already loaded, skipping auto-load")
+                    return@launch
+                }
+                
+                // Get default model ID
+                val defaultModelId = preferences.defaultModelId
+                if (defaultModelId == null) {
+                    Log.d(TAG, "No default model set")
+                    return@launch
+                }
+                
+                // Find the model in repository
+                val model = modelRepository.getModelById(defaultModelId)
+                if (model == null) {
+                    Log.w(TAG, "Default model not found: $defaultModelId")
+                    return@launch
+                }
+                
+                // Check if model is downloaded
+                if (model.localPath == null) {
+                    Log.d(TAG, "Default model not downloaded: ${model.name}")
+                    return@launch
+                }
+                
+                Log.i(TAG, "Auto-loading default model: ${model.name}")
+                
+                // Load the model
+                modelManager.loadModel(
+                    model = model,
+                    threads = hardwareCapabilities.getOptimalThreadCount(),
+                    contextSize = model.contextLength,
+                    useMmap = true,
+                    useNNAPI = hardwareCapabilities.supportsNNAPI()
+                ).fold(
+                    onSuccess = {
+                        Log.i(TAG, "Default model loaded successfully")
+                    },
+                    onFailure = { error ->
+                        Log.e(TAG, "Failed to auto-load model: ${error.message}", error)
+                    }
+                )
+            } catch (e: Exception) {
+                Log.e(TAG, "Error in auto-load: ${e.message}", e)
+            }
+        }
     }
 
     fun onSearchQueryChange(query: String) {

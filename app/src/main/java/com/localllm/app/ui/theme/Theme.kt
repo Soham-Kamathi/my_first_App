@@ -9,13 +9,19 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import com.localllm.app.data.model.AppTheme
+import com.localllm.app.data.model.AppearanceStyle
+
+// CompositionLocal to access current appearance style anywhere in the app
+val LocalAppearanceStyle = staticCompositionLocalOf { AppearanceStyle.DEFAULT }
 
 // Modern Dark Theme Colors - Inspired by premium AI interfaces
 // Primary - Cyan/Teal accent (like the reference images)
@@ -142,6 +148,7 @@ private val LightColorScheme = lightColorScheme(
 @Composable
 fun LocalLLMTheme(
     appTheme: AppTheme = AppTheme.SYSTEM,
+    appearanceStyle: AppearanceStyle = AppearanceStyle.DEFAULT,
     dynamicColor: Boolean = false, // Disabled by default for consistent branding
     content: @Composable () -> Unit
 ) {
@@ -151,13 +158,29 @@ fun LocalLLMTheme(
         AppTheme.SYSTEM -> isSystemInDarkTheme()
     }
 
+    // Select color scheme based on appearance style and dark/light mode
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
+        appearanceStyle == AppearanceStyle.NOTHING -> {
+            if (darkTheme) NothingDarkColorScheme else NothingLightColorScheme
+        }
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
+    }
+    
+    // Select typography based on appearance style
+    val typography = when (appearanceStyle) {
+        AppearanceStyle.NOTHING -> NothingTypography
+        AppearanceStyle.DEFAULT -> Typography
+    }
+    
+    // Select shapes based on appearance style
+    val shapes = when (appearanceStyle) {
+        AppearanceStyle.NOTHING -> NothingShapes
+        AppearanceStyle.DEFAULT -> MaterialTheme.shapes
     }
 
     val view = LocalView.current
@@ -181,9 +204,13 @@ fun LocalLLMTheme(
         }
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    // Provide appearance style via CompositionLocal for component-level theming
+    CompositionLocalProvider(LocalAppearanceStyle provides appearanceStyle) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = typography,
+            shapes = shapes,
+            content = content
+        )
+    }
 }

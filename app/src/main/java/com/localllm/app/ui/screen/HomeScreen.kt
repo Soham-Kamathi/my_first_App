@@ -91,6 +91,7 @@ fun HomeScreen(
     val searchResults by viewModel.searchResults.collectAsState()
 
     // Core Features (horizontal scrolling cards with gradients)
+    // Nothing theme: Black/Grey/White/Red color palette
     val coreFeatures = remember {
         listOf(
             CoreFeatureCard(
@@ -98,7 +99,7 @@ fun HomeScreen(
                 title = "AI Chat",
                 description = "Start intelligent conversations",
                 icon = Icons.Outlined.Chat,
-                gradient = listOf(Color(0xFF667EEA), Color(0xFF764BA2)),
+                gradient = listOf(Color(0xFFD92027), Color(0xFFB71C1C)),
                 badge = "Popular",
                 stats = "24/7"
             ),
@@ -107,7 +108,7 @@ fun HomeScreen(
                 title = "Document Chat",
                 description = "AI-powered semantic search",
                 icon = Icons.Outlined.Description,
-                gradient = listOf(Color(0xFFF093FB), Color(0xFFF5576C)),
+                gradient = listOf(Color(0xFF424242), Color(0xFF212121)),
                 badge = "AI",
                 stats = "RAG"
             ),
@@ -116,7 +117,7 @@ fun HomeScreen(
                 title = "Prompt Lab",
                 description = "Experiment & fine-tune",
                 icon = Icons.Outlined.Science,
-                gradient = listOf(Color(0xFF4FACFE), Color(0xFF00F2FE)),
+                gradient = listOf(Color(0xFF757575), Color(0xFF424242)),
                 badge = "Pro",
                 stats = "Test"
             ),
@@ -125,7 +126,7 @@ fun HomeScreen(
                 title = "Code Companion",
                 description = "Debug & optimize code",
                 icon = Icons.Outlined.Code,
-                gradient = listOf(Color(0xFF43E97B), Color(0xFF38F9D7)),
+                gradient = listOf(Color(0xFF212121), Color(0xFF000000)),
                 badge = "Beta",
                 stats = "Dev"
             ),
@@ -134,7 +135,7 @@ fun HomeScreen(
                 title = "Ask Image",
                 description = "Visual AI analysis",
                 icon = Icons.Outlined.Image,
-                gradient = listOf(Color(0xFFFA709A), Color(0xFFFEE140)),
+                gradient = listOf(Color(0xFFE85057), Color(0xFFD92027)),
                 stats = "Vision"
             ),
             CoreFeatureCard(
@@ -142,7 +143,7 @@ fun HomeScreen(
                 title = "Audio Scribe",
                 description = "Speech to text locally",
                 icon = Icons.Outlined.Mic,
-                gradient = listOf(Color(0xFF30CFD0), Color(0xFF330867)),
+                gradient = listOf(Color(0xFF616161), Color(0xFF303030)),
                 stats = "STT"
             ),
             CoreFeatureCard(
@@ -150,7 +151,7 @@ fun HomeScreen(
                 title = "Flashcards",
                 description = "AI-powered learning",
                 icon = Icons.Outlined.Style,
-                gradient = listOf(Color(0xFFFFD93D), Color(0xFFFF8C00)),
+                gradient = listOf(Color(0xFFEEEEEE), Color(0xFFBDBDBD)),
                 stats = "Study"
             ),
             CoreFeatureCard(
@@ -158,7 +159,7 @@ fun HomeScreen(
                 title = "Quiz Mode",
                 description = "Test your knowledge",
                 icon = Icons.Outlined.Quiz,
-                gradient = listOf(Color(0xFF8E44AD), Color(0xFFC0392B)),
+                gradient = listOf(Color(0xFF9E9E9E), Color(0xFF757575)),
                 stats = "Test"
             )
         )

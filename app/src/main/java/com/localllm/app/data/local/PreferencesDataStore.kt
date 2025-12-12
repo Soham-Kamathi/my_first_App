@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import com.localllm.app.data.model.AppTheme
+import com.localllm.app.data.model.AppearanceStyle
 import com.localllm.app.data.model.GenerationConfig
 import com.localllm.app.data.model.StorageType
 import com.localllm.app.data.model.UserPreferences
@@ -27,6 +28,7 @@ class PreferencesDataStore @Inject constructor(
 ) {
     private object PreferencesKeys {
         val THEME = stringPreferencesKey("theme")
+        val APPEARANCE_STYLE = stringPreferencesKey("appearance_style")
         val DEFAULT_MODEL_ID = stringPreferencesKey("default_model_id")
         val DEFAULT_SYSTEM_PROMPT = stringPreferencesKey("default_system_prompt")
         val PREFERRED_STORAGE_TYPE = stringPreferencesKey("preferred_storage_type")
@@ -79,6 +81,10 @@ class PreferencesDataStore @Inject constructor(
             try { AppTheme.valueOf(it) } catch (e: Exception) { AppTheme.SYSTEM }
         } ?: AppTheme.SYSTEM
 
+        val appearanceStyle = preferences[PreferencesKeys.APPEARANCE_STYLE]?.let {
+            try { AppearanceStyle.valueOf(it) } catch (e: Exception) { AppearanceStyle.DEFAULT }
+        } ?: AppearanceStyle.DEFAULT
+
         val storageType = preferences[PreferencesKeys.PREFERRED_STORAGE_TYPE]?.let {
             try { StorageType.valueOf(it) } catch (e: Exception) { StorageType.INTERNAL }
         } ?: StorageType.INTERNAL
@@ -94,6 +100,7 @@ class PreferencesDataStore @Inject constructor(
 
         return UserPreferences(
             theme = theme,
+            appearanceStyle = appearanceStyle,
             defaultModelId = preferences[PreferencesKeys.DEFAULT_MODEL_ID],
             defaultSystemPrompt = preferences[PreferencesKeys.DEFAULT_SYSTEM_PROMPT] 
                 ?: UserPreferences.DEFAULT_SYSTEM_PROMPT,
@@ -123,6 +130,12 @@ class PreferencesDataStore @Inject constructor(
     suspend fun updateTheme(theme: AppTheme) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.THEME] = theme.name
+        }
+    }
+
+    suspend fun updateAppearanceStyle(style: AppearanceStyle) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.APPEARANCE_STYLE] = style.name
         }
     }
 
